@@ -7,13 +7,19 @@ let img_info;
 
 // Variabili per oggetti animati
 let img_waterfall;
-let img_waterfall2; 
+let img_waterfall2;
+let img_waterfall_off; 
+let img_waterfall_on;  
 let waterfall_segments = []; 
 let img_insegna_vertical;
 let img_condizionatore; 
 let img_vending_machine;
 let img_cat;
 let img_sgabelli;
+let img_muro_rompibile;
+
+// SFONDO DIALOGO
+let img_dialogue_bg; 
 
 let background1;
 let background2;
@@ -26,6 +32,39 @@ let floor;
 
 // Variabile per la zona funivia
 let funivia_zone; 
+let wf_damage_zone; 
+
+// VARIABILI SISTEMA DIALOGHI
+let npc_list = [];
+let dialogue_active = false;
+let current_dialogue_index = 0;
+let current_npc = null;
+let dialogue_popup = null;
+let dialogue_text = null;
+let dialogue_speaker = null;
+let action_key_was_pressed = false; 
+const NPC_INTERACTION_RANGE = 200; 
+
+// VARIABILI LOGICA LIVELLO
+let has_spoken_to_cat = false;
+let waterfall_sequence_triggered = false;
+let cat_npc_ref = null; 
+
+// DEFINIZIONE DIALOGHI
+let dialoghi_gatto_fase1 = [
+    { speaker: "npc", text: "Oh, buonasera, giovane minatore! Forse tu puoi aiutarmi, nè?\nQuesto scarico d'acqua sta riversando proprio davanti alla mia\nbancarella, e io non so proprio come fare." },
+    { speaker: "npc", text: "Forse è colpa di quell'ostacolo che ha deviato il flusso, sì sì…" }
+];
+
+let dialoghi_gatto_fase2 = [
+    { speaker: "npc", text: "Ah! Ottima tecnica di spalla, wakamono, molto bene!\nCome dice il sensei: l'acqua che scorre lenta,\ncol tempo modella anche la roccia." },
+    { speaker: "npc", text: "Prima o poi avrebbe danneggiato il mio umile mise, nè…" },
+    { speaker: "player", text: "Quella non è acqua, sono residui chimici.\nNon dovrebbero scorrere a cielo aperto, è veleno!" },
+    { speaker: "npc", text: "Ma è l'unico modo che ho per cucinare il mio ramen, anche se…\nun tempo, ho l'impressione che il sapore fosse migliore, sì…" },
+    { speaker: "player", text: "È colpa di un incantesimo che ha avvelenato la Fonte.\nIl mondo non deve essere così, e io posso spezzare tutto questo\nse raggiungo la Fonte Eterna." },
+    { speaker: "npc", text: "Ara… dunque sono le nostre menti a essere state modellate…\nHayaku, wakamono! Ike, ike!" }
+];
+
 
 function preload(s) {
 
@@ -41,12 +80,22 @@ function preload(s) {
 
     img_waterfall = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/waterfall1sprites.png", 119, 211);
     img_waterfall2 = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/waterfall2sprites.png", 126, 210);
+    
+    // NUOVE SPRITE CASCATA
+    img_waterfall_off = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/waterfall1offsprites.png", 119, 211);
+    img_waterfall_on = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/waterfall1onsprites.png", 119, 211);
 
     img_insegna_vertical = PP.assets.sprite.load_spritesheet(s, "assets/images/insegna_vertical.png", 173, 225);
     img_condizionatore = PP.assets.sprite.load_spritesheet(s, "assets/images/condizionatore1.png", 132, 102);
     img_vending_machine = PP.assets.sprite.load_spritesheet(s, "assets/images/vending_machine.png", 180, 365);
     img_cat = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_cat.png", 150, 150);
     img_sgabelli = PP.assets.image.load(s, "assets/images/sgabelli.png");
+    
+    // CARICAMENTO MURO
+    img_muro_rompibile = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_muro.png", 364, 354);
+
+    // CARICAMENTO SFONDO DIALOGO
+    img_dialogue_bg = PP.assets.image.load(s, "assets/images/dialoghi/dialogo1.png");
 
     preload_platforms(s);
     preload_player(s);
@@ -54,6 +103,10 @@ function preload(s) {
 
 
 function create(s) {
+    
+    reset_npcs(); 
+    has_spoken_to_cat = false;
+    waterfall_sequence_triggered = false;
 
     // PARALLAX
     background1 = PP.assets.tilesprite.add(s, img_background1, 0, 0, 1280, 800, 0, 0);
@@ -72,7 +125,7 @@ function create(s) {
     background4.tile_geometry.scroll_factor_x = 0;
     background4.tile_geometry.scroll_factor_y = 0;
 
-    // *** CASCATA ORIGINALE (VISIVA) ***
+    // *** CASCATA ORIGINALE (VISIVA) - QUELLA CHE DEVE SPARIRE ***
     let wf_x = 3984;
     let wf_y_start = -2844; 
     let wf_y_end = -1711;
@@ -90,7 +143,7 @@ function create(s) {
         PP.assets.sprite.animation_add(seg, anim_key, 0, 7, 10, -1);
         PP.assets.sprite.animation_play(seg, anim_key);
         PP.layers.set_z_index(seg, 30); 
-        waterfall_segments.push(seg);
+        waterfall_segments.push(seg); 
         anim_counter++;
     }
 
@@ -110,7 +163,6 @@ function create(s) {
             PP.assets.sprite.animation_add(seg, anim_name, 0, 7, 10, -1);
             PP.assets.sprite.animation_play(seg, anim_name);
             PP.layers.set_z_index(seg, 30); 
-            waterfall_segments.push(seg); 
             extra_anim_counter++;
         }
     });
@@ -133,7 +185,6 @@ function create(s) {
             PP.assets.sprite.animation_add(seg, anim_name, 0, 7, 10, -1);
             PP.assets.sprite.animation_play(seg, anim_name);
             PP.layers.set_z_index(seg, 30); 
-            waterfall_segments.push(seg);
             wf2_anim_counter++;
         }
     });
@@ -170,18 +221,27 @@ function create(s) {
     PP.assets.sprite.animation_play(vm, "blink_vm");
     PP.layers.set_z_index(vm, 20);
 
+    // ===============================================
+    // *** NPC GATTO (Ora Interagibile) ***
+    // ===============================================
     let cat = PP.assets.sprite.add(s, img_cat, 4209, -2103, 0, 1);
     PP.assets.sprite.animation_add(cat, "idle_cat", 0, 5, 10, -1);
     PP.assets.sprite.animation_play(cat, "idle_cat");
+    PP.physics.add(s, cat, PP.physics.type.STATIC); 
+    PP.layers.set_z_index(cat, 20);
+
+    // REGISTRAZIONE GATTO CON FASE 1
+    register_npc(cat, "Gatto", dialoghi_gatto_fase1);
+    cat_npc_ref = cat; 
+    // ===============================================
 
     let sgabelli = PP.assets.image.add(s, img_sgabelli, 4203, -2045, 0, 1);
-    PP.layers.set_z_index(cat, 20);
     PP.layers.set_z_index(sgabelli, 21);
 
 
     // *** GESTIONE PUNTO DI PARTENZA ***
-    let start_x = 4300;
-    let start_y = -2000;
+    let start_x = -100;
+    let start_y = 600;
 
     if (PP.game_state.get_variable("punto_di_partenza") == "funivia_ritorno") {
         console.log("Spawn alla stazione della funivia (Ritorno)!");
@@ -191,7 +251,7 @@ function create(s) {
     }
 
     // ===============================================
-    // *** CREAZIONE PLAYER ***
+    // *** CREAZIONE PLAYER (SPOSTATO PRIMA DEL MURO) ***
     // ===============================================
     player = PP.assets.sprite.add(s, img_player, start_x, start_y, 0.5, 1);
     PP.physics.add(s, player, PP.physics.type.DYNAMIC);
@@ -205,6 +265,46 @@ function create(s) {
     configure_player_animations(s, player);
     create_platforms_lvl1_pt2(s, player);
 
+
+    // ===============================================
+    // *** MURO ROMPIBILE ***
+    // ===============================================
+    let x_muro = 4574;
+    let y_muro = -1984;
+    
+    let muro = PP.assets.sprite.add(s, img_muro_rompibile, x_muro, y_muro, 0, 1);
+    muro.is_broken = false;
+    
+    // *** Z-INDEX 25 ***
+    PP.layers.set_z_index(muro, 25); 
+    
+    PP.assets.sprite.animation_add(muro, "break", 0, 22, 10, 0);
+    PP.assets.sprite.animation_add(muro, "idle", 0, 0, 1, 0);
+    PP.assets.sprite.animation_play(muro, "idle");
+    PP.physics.add(s, muro, PP.physics.type.STATIC);
+    
+    s.muro_oggett = muro;
+
+    // *** SENSORE MURO RIDIMENSIONATO (CENTRO A 4734) ***
+    let sensore_width = 236;
+    let sensore_height = 252;
+    let sensore_x = 4734;
+    let sensore_y = -2175;
+
+    let sensore = PP.shapes.rectangle_add(s, sensore_x, sensore_y, sensore_width, sensore_height, "0x00FF00", 0);
+    sensore.visibility.alpha = 0; 
+    sensore.muro_collegato = muro;
+    PP.physics.add(s, sensore, PP.physics.type.STATIC);
+
+    let on_sensore_overlap = function(s, p, obj_sensore) {
+        if (!has_spoken_to_cat) return;
+        p.near_breakable_wall = true;
+        p.current_wall = obj_sensore.muro_collegato; 
+    };
+    PP.physics.add_overlap_f(s, player, sensore, on_sensore_overlap);
+    // ===============================================
+
+
     // ==========================================================
     // *** COLLIDER DANNO CASCATA ***
     // ==========================================================
@@ -212,17 +312,13 @@ function create(s) {
     let wf_center_y = wf_y_start + (wf_height_total / 2);
     let wf_center_x = wf_x + (119 / 2); 
 
-    // Rettangolo invisibile per il danno
-    let wf_damage_zone = PP.shapes.rectangle_add(s, wf_center_x, wf_center_y, 90, wf_height_total, "0xFF0000", 0);
+    wf_damage_zone = PP.shapes.rectangle_add(s, wf_center_x, wf_center_y, 90, wf_height_total, "0xFF0000", 0);
     PP.physics.add(s, wf_damage_zone, PP.physics.type.STATIC);
 
     PP.physics.add_overlap_f(s, player, wf_damage_zone, function(scene, p, zone) {
         if (!p.invulnerable) {
-            // Spinta via (Knockback)
             let knock_dir = (p.geometry.x < zone.geometry.x) ? -1 : 1;
             PP.physics.set_velocity_x(p, -800 * knock_dir);
-            
-            // Chiama la funzione di danno
             hit_player(s, p);
         }
     });
@@ -279,7 +375,77 @@ function create(s) {
 
 
 function update(s) {
-    manage_player_update(s, player);
+    // 1. GESTIONE INPUT DIALOGHI
+    manage_npc_interaction(s, player);
+
+    // 2. GESTIONE EVENTO ROTTURA MURO
+    if (s.muro_oggett && s.muro_oggett.is_broken && !waterfall_sequence_triggered) {
+        waterfall_sequence_triggered = true;
+        
+        // Aspetta che l'animazione del muro finisca (2300ms)
+        PP.timers.add_timer(s, 2300, function() {
+            
+            // A. CAMBIA DIALOGO GATTO -> FASE 2
+            if (cat_npc_ref) {
+                cat_npc_ref.dialogues = dialoghi_gatto_fase2;
+            }
+
+            // B. RIMUOVI COLLIDER DANNO
+            if (wf_damage_zone) {
+                PP.shapes.destroy(wf_damage_zone); 
+                wf_damage_zone = null;
+            }
+
+            // C. ANIMAZIONE CASCATA VECCHIA CHE SCENDE
+            waterfall_segments.forEach((seg, index) => {
+                
+                // <<< TIMER VELOCIZZATO A 400ms >>>
+                PP.timers.add_timer(s, index * 400, function() {
+                    let x = seg.geometry.x;
+                    let y = seg.geometry.y;
+                    
+                    safe_destroy(seg);
+
+                    let seg_off = PP.assets.sprite.add(s, img_waterfall_off, x, y, 0, 0);
+                    // <<< ANIMAZIONE VELOCIZZATA A 20 FPS >>>
+                    PP.assets.sprite.animation_add(seg_off, "play_off", 0, 7, 20, 0);
+                    PP.assets.sprite.animation_play(seg_off, "play_off");
+                    PP.layers.set_z_index(seg_off, 30);
+
+                    // <<< DISTRUZIONE DOPO 400ms (8 frame / 20 fps) >>>
+                    PP.timers.add_timer(s, 400, function() {
+                        safe_destroy(seg_off); 
+                    }, false);
+
+                }, false);
+            });
+
+            // D. NUOVA CASCATA CHE APPARE
+            let new_wf = PP.assets.sprite.add(s, img_waterfall_on, 4677, -2066, 0, 1);
+            PP.layers.set_z_index(new_wf, 20);
+            PP.assets.sprite.animation_add(new_wf, "appear", 0, 7, 10, 0);
+            PP.assets.sprite.animation_play(new_wf, "appear");
+
+            PP.timers.add_timer(s, 800, function() {
+                safe_destroy(new_wf); 
+                
+                let final_wf = PP.assets.sprite.add(s, img_waterfall, 4677, -2066, 0, 1);
+                PP.layers.set_z_index(final_wf, 20);
+                PP.assets.sprite.animation_add(final_wf, "loop_forever", 0, 7, 10, -1);
+                PP.assets.sprite.animation_play(final_wf, "loop_forever");
+            }, false);
+
+        }, false);
+    }
+
+
+    // 3. GESTIONE MOVIMENTO E IDLE
+    if (is_dialogue_active()) {
+        PP.physics.set_velocity_x(player, 0);
+        PP.assets.sprite.animation_play(player, "idle");
+    } else {
+        manage_player_update(s, player);
+    }
 
     let vel_x = PP.physics.get_velocity_x(player);
     if (vel_x > 50) player.cam_target_x = -200;
@@ -326,15 +492,13 @@ function update(s) {
 function hit_player(s, player) {
     if (player.invulnerable) return;
 
-    // Prendi le vite dal Game State Globale
     let hp = PP.game_state.get_variable("player_hp");
     hp = hp - 1;
     PP.game_state.set_variable("player_hp", hp);
-    player.hp = hp; // Aggiorna anche variabile locale per sicurezza
+    player.hp = hp; 
 
     console.log("Ahi! Vite rimaste: " + hp);
     
-    // Aggiorna la grafica dei cuori
     if(typeof update_cuore_graphic === "function") update_cuore_graphic(player);
 
     if (hp <= 0) {
@@ -342,10 +506,9 @@ function hit_player(s, player) {
         PP.game_state.set_variable("last_scene", "lvl1_pt2");
         PP.scenes.start("game_over");  
     } else {
-        PP.physics.set_velocity_y(player, -400); // Saltino di dolore
+        PP.physics.set_velocity_y(player, -400); 
         player.invulnerable = true;
 
-        // Effetto lampeggiante
         function do_blink() {
             if (player.invulnerable === false) {
                 player.visibility.alpha = 1;
@@ -360,7 +523,6 @@ function hit_player(s, player) {
         }
         do_blink();
 
-        // Rimuovi invulnerabilità dopo 2 secondi
         PP.timers.add_timer(s, 2000, function() {
             player.invulnerable = false;
             player.visibility.alpha = 1;
@@ -372,3 +534,156 @@ function destroy(s) {
 }
 
 PP.scenes.add("lvl1_pt2", preload, create, update, destroy);
+
+// ==========================================================
+// *** SISTEMA DIALOGHI E NPC ***
+// ==========================================================
+
+function register_npc(sprite_obj, name, dialogues) {
+    sprite_obj.npc_name = name;
+    sprite_obj.dialogues = dialogues;
+    sprite_obj.interaction_range = NPC_INTERACTION_RANGE;
+    npc_list.push(sprite_obj);
+}
+
+function reset_npcs() {
+    npc_list = [];
+    close_dialogue_popup();
+    action_key_was_pressed = false;
+}
+
+function is_player_near_npc(player, npc) {
+    let dist = Math.abs(player.geometry.x - npc.geometry.x);
+    let height_diff = Math.abs(player.geometry.y - npc.geometry.y);
+    return dist < npc.interaction_range && height_diff < 200;
+}
+
+function get_nearest_interactable_npc(player) {
+    for (let i = 0; i < npc_list.length; i++) {
+        let npc = npc_list[i];
+        if (is_player_near_npc(player, npc)) {
+            return npc;
+        }
+    }
+    return null;
+}
+
+function open_dialogue_popup(s, npc) {
+    if (dialogue_active) return;
+    dialogue_active = true;
+    current_npc = npc;
+    current_dialogue_index = 0;
+    
+    has_spoken_to_cat = true; 
+
+    let screen_center_x = 0; 
+    let popup_y = 0; 
+    
+    dialogue_popup = PP.assets.image.add(s, img_dialogue_bg, screen_center_x, popup_y, 0, 0);
+    dialogue_popup.visibility.alpha = 0.85;
+    dialogue_popup.tile_geometry.scroll_factor_x = 0;
+    dialogue_popup.tile_geometry.scroll_factor_y = 0;
+    PP.layers.set_z_index(dialogue_popup, 10001);
+    
+    let text_padding_left = 260;  
+    let text_padding_top = 32;   
+
+    dialogue_speaker = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top, "", 22, "Arial", "bold", "0x01AA03", null, 0, 0);
+    dialogue_speaker.tile_geometry.scroll_factor_x = 0;
+    dialogue_speaker.tile_geometry.scroll_factor_y = 0;
+    PP.layers.set_z_index(dialogue_speaker, 10002);
+    
+    dialogue_text = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top + 55, "", 20, "Arial", "normal", "0xffffff", null, 0, 0);
+    dialogue_text.tile_geometry.scroll_factor_x = 0;
+    dialogue_text.tile_geometry.scroll_factor_y = 0;
+    PP.layers.set_z_index(dialogue_text, 10002);
+    
+    show_current_dialogue_line();
+}
+
+function show_current_dialogue_line() {
+    if (!current_npc || current_dialogue_index >= current_npc.dialogues.length) {
+        close_dialogue_popup();
+        return;
+    }
+    
+    let line = current_npc.dialogues[current_dialogue_index];
+    let speaker_name = (line.speaker === "npc") ? current_npc.npc_name : "Tillidak";
+    
+    PP.shapes.text_change(dialogue_speaker, speaker_name);
+    PP.shapes.text_change(dialogue_text, line.text);
+}
+
+function close_dialogue_popup() {
+    if (!dialogue_active) return;
+    dialogue_active = false;
+    current_npc = null;
+    current_dialogue_index = 0;
+    
+    safe_destroy(dialogue_popup);
+    dialogue_popup = null;
+    
+    if (dialogue_text) { PP.shapes.destroy(dialogue_text); dialogue_text = null; }
+    if (dialogue_speaker) { PP.shapes.destroy(dialogue_speaker); dialogue_speaker = null; }
+}
+
+function advance_dialogue() {
+    if (!dialogue_active) return;
+    current_dialogue_index++;
+    show_current_dialogue_line();
+}
+
+function manage_npc_interaction(s, player) {
+    let e_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.E);
+    let down_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.DOWN);
+    
+    let is_input_active = false;
+    if (dialogue_active) {
+        is_input_active = e_pressed || down_pressed;
+    } else {
+        is_input_active = e_pressed;
+    }
+    
+    if (is_input_active && !action_key_was_pressed) {
+        if (dialogue_active) {
+            advance_dialogue();
+        } else {
+            let nearby_npc = get_nearest_interactable_npc(player);
+            if (nearby_npc) {
+                open_dialogue_popup(s, nearby_npc);
+            }
+        }
+    }
+    action_key_was_pressed = is_input_active;
+}
+
+function is_dialogue_active() {
+    return dialogue_active;
+}
+
+// *** FUNZIONE SAFE DESTROY (IMPORTANTE!) ***
+function safe_destroy(obj) {
+    if (!obj) return;
+    
+    // Prova 1: Metodo destroy diretto
+    if (typeof obj.destroy === 'function') {
+        obj.destroy();
+        return;
+    }
+    
+    // Prova 2: Oggetto Phaser interno
+    if (obj.ph_obj && typeof obj.ph_obj.destroy === 'function') {
+        obj.ph_obj.destroy();
+        return;
+    }
+    
+    // Prova 3: Se è uno sprite interno
+    if (obj.sprite && typeof obj.sprite.destroy === 'function') {
+        obj.sprite.destroy();
+        return;
+    }
+
+    // Fallback: Nascondi e sposta via
+    if (obj.visibility) obj.visibility.alpha = 0;
+    if (obj.geometry) obj.geometry.y = 10000;
+}

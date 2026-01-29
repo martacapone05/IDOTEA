@@ -17,7 +17,7 @@ function create(s) {
     
     // 2. Creiamo l'animazione
     // Parametri: oggetto, nome, frame inizio, frame fine, velocità (fps), ripetizioni (-1 = infinito)
-    PP.assets.sprite.animation_add(anim_obj, "play_credits", 0, 3, 4, -1);
+    PP.assets.sprite.animation_add(anim_obj, "play_credits", 0, 2, 4, -1);
     
     // 3. Facciamo partire l'animazione
     PP.assets.sprite.animation_play(anim_obj, "play_credits");

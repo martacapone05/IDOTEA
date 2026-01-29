@@ -23,6 +23,7 @@ let img_piattaforma_suprema1, img_piattaforma_suprema2;
 
 let img_casetta;
 let img_fine_tubo;
+let img_fine_tubo1;
 
 let img_lvl1map_pt1, img_lvl1map_pt2, img_lvl2map1_pt1, img_lvl2map2_pt1, img_lvl2map3_pt1;
 
@@ -144,6 +145,7 @@ function preload_platforms(s) {
 
     img_casetta = PP.assets.image.load(s, "assets/images/casetta.png")
     img_fine_tubo = PP.assets.image.load(s, "assets/images/fine_tubo.png")
+    img_fine_tubo1 = PP.assets.image.load(s, "assets/images/fine_tubo1.png")
 
     img_lvl1map_pt1 = PP.assets.image.load(s, "assets/images/lvl1map_pt1.png");
     img_lvl1map_pt2 = PP.assets.image.load(s, "assets/images/lvl1map_pt2.png");
@@ -349,8 +351,6 @@ function create_platforms_lvl1_pt1(s, player) {
 
 
 function create_platforms_lvl1_pt2(s, player) {
-
-    let scala_back = PP.assets.image.add(s, img_ladder, -700, 1300, 0, 1);
     
     let platform1 = PP.assets.image.add(s, img_platform1, 850, 550, 0, 1);
     let platform2 = PP.assets.image.add(s, img_platform2, 1550, 660, 0, 1);
@@ -389,17 +389,14 @@ function create_platforms_lvl1_pt2(s, player) {
     let ladder1 = PP.assets.image.add(s, img_ladder, 4850, -1280, 0, 1);
     let ladder_vera = PP.assets.image.add(s, img_ladder_vera, 4850, -1280, 0, 1);
 
-    let fine_tubo = PP.assets.image.add(s, img_fine_tubo, 3955, -1633, 0, 1);
-
+    let fine_tubo = PP.assets.image.add(s, img_fine_tubo, 4646, -1984, 0, 1);
+    let fine_tubo2 = PP.assets.image.add(s, img_fine_tubo1, 4639, -2249, 0, 1);
 
     PP.layers.set_z_index(mappa2, 10);
-    PP.layers.set_z_index(player, 30);
+    PP.layers.set_z_index(player, 35);
     PP.layers.set_z_index(ladder_vera, 20);
     PP.layers.set_z_index(fine_tubo, 30);
-
-
-    PP.physics.add(s, scala_back, PP.physics.type.STATIC);
-    PP.physics.add_overlap_f(s, player, scala_back, vai_indietro);
+    PP.layers.set_z_index(fine_tubo2, 31);
 
     PP.physics.add(s, platform1, PP.physics.type.STATIC);
     PP.physics.add_collider_f(s, player, platform1, collision_platform);

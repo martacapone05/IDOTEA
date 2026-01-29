@@ -18,7 +18,7 @@ function configure_player_animations(s, player) {
     // MODIFICA 2: Definizione dell'animazione IDLE
     // Sostituisci 0 e 3 con i tuoi frame di inizio e fine per l'idle.
     // Il parametro -1 alla fine significa "loop infinito" (continua a ripetersi)
-    PP.assets.sprite.animation_add_list(player, "idle", [24, 25, 26, 25], 6, -1);
+    PP.assets.sprite.animation_add_list(player, "idle", [24, 25, 26, 25], 4, -1);
     
     PP.assets.sprite.animation_add(player, "climb", 27, 34, 8, -1);
     PP.assets.sprite.animation_add_list(player, "piccone", [19, 20, 21, 22, 23, 22, 21, 20, 19], 12, 1);
