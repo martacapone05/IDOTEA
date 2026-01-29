@@ -25,7 +25,7 @@ let img_casetta;
 let img_fine_tubo;
 let img_fine_tubo1;
 
-let img_lvl1map_pt1, img_lvl1map_pt2, img_lvl2map1_pt1, img_lvl2map2_pt1, img_lvl2map3_pt1;
+let img_lvl1map_pt1, img_lvl1map_pt2, img_lvl2map1_pt1, img_lvl2map2_pt1, img_lvl2map3_pt1, img_lvl2map_pt2, img_lvl3map;
 
 let img_sfondolvl1, img_primo_piano1;
 
@@ -152,6 +152,8 @@ function preload_platforms(s) {
     img_lvl2map1_pt1 = PP.assets.image.load(s, "assets/images/lvl2map1_pt1.png");
     img_lvl2map2_pt1 = PP.assets.image.load(s, "assets/images/lvl2map2_pt1.png");
     img_lvl2map3_pt1 = PP.assets.image.load(s, "assets/images/lvl2map3_pt1.png");
+    img_lvl2map_pt2 = PP.assets.image.load(s, "assets/images/lvl2map_pt2.png");
+    img_lvl3map = PP.assets.image.load(s, "assets/images/lvl3map.png");
 
     img_sfondolvl1 = PP.assets.image.load(s, "assets/images/sfondi/sfondolvl1.png")
     img_primo_piano1 = PP.assets.image.load(s, "assets/images/primo_piano1.png")
@@ -674,8 +676,13 @@ function create_platforms_lvl2_pt2(s, player) {
     let blocchetto13 = PP.assets.image.add(s, img_blocchetto44, 2300, -4270, 0, 1);
     let blocco4 = PP.assets.image.add(s, img_blocco14, 2800, -4140, 0, 1);
 
-
     let ladder1 = PP.assets.image.add(s, img_ladder, 3100, -2600, 0, 1);
+
+    let mappa6 = PP.assets.image.add(s, img_lvl2map_pt2, -1000, 2000, 0, 1);
+
+
+    PP.layers.set_z_index(mappa6, 10);
+    PP.layers.set_z_index(player, 30);
 
 
     PP.physics.add(s, blocco_supremo1, PP.physics.type.STATIC);
@@ -828,10 +835,15 @@ function create_platforms_lvl3(s, player) {
     let platform30 = PP.assets.image.add(s, img_platform1, 5000, -5450, 0, 1);
     let platform31 = PP.assets.image.add(s, img_platform1, 4500, -5750, 0, 1);
     let piattaforma_suprema1 = PP.assets.image.add(s, img_piattaforma_suprema1, 300, -5700, 0, 1)
-    let piattaforma_suprema2 = PP.assets.image.add(s, img_piattaforma_suprema2, 500, -5980, 0, 1)
+    let piattaforma_suprema2 = PP.assets.image.add(s, img_piattaforma_suprema2, 700, -5980, 0, 1)
 
 
     let ladder1 = PP.assets.image.add(s, img_ladder, 3700, 210, 0, 1);
+
+    let mappa7 = PP.assets.image.add(s, img_lvl3map, -1970, 1380, 0, 1);
+
+    PP.layers.set_z_index(mappa7, 10);
+    PP.layers.set_z_index(player, 30);
 
 
     PP.physics.add(s, platform1, PP.physics.type.STATIC);

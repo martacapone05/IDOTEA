@@ -8,7 +8,6 @@ let player;
 let floor;
 
 function preload(s) {
-    console.log("Executing preload() - SCENE LVL 3");
 
     preload_hud(s);
 
@@ -21,15 +20,14 @@ function preload(s) {
 }
 
 function create(s) {
-    console.log("Executing create() - SCENE LVL 3");
 
     background = PP.assets.tilesprite.add(s, img_background, 0, 0, 1280, 800, 0, 0);
     background.tile_geometry.scroll_factor_x = 0;
     background.tile_geometry.scroll_factor_y = 0;
 
     // SPAWN
-    let start_x = 3500;
-    let start_y = -5000;
+    let start_x = -1920;
+    let start_y = 510;
 
     // Se arrivi dalla fine (es. livello successivo), cambi coordinate
     if (PP.game_state.get_variable("punto_di_partenza") == "fine") {
@@ -119,7 +117,6 @@ function update(s) {
 }
 
 function destroy(s) {
-    console.log("Executing destroy() - SCENE LVL 3");
 }
 
 PP.scenes.add("lvl3", preload, create, update, destroy);
