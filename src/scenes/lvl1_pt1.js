@@ -3,6 +3,7 @@ let img_info;
 let img_overlay; 
 let img_light;
 let img_topo; 
+let img_dialogue_bg; 
 
 let overlay; 
 let info;
@@ -19,13 +20,11 @@ let current_dialogue_index = 0;
 let current_npc = null;
 let dialogue_popup = null;
 let dialogue_text = null;
-let dialogue_hint = null;
 let dialogue_speaker = null;
-let e_key_was_pressed = false;
+let action_key_was_pressed = false; 
 
 // Configurazione NPC
-const NPC_INTERACTION_RANGE = 200; // Distanza per parlare
-const NPC_DIALOGUE_COLOR = "0x1a1a2e"; // Colore sfondo popup
+const NPC_INTERACTION_RANGE = 200; 
 
 function preload(s) {
     preload_hud(s);
@@ -44,13 +43,16 @@ function preload(s) {
     // NPC TOPO
     img_topo = PP.assets.sprite.load_spritesheet(s, "assets/images/sprite_topo.png", 209, 214);
 
+    // SFONDO DIALOGO
+    img_dialogue_bg = PP.assets.image.load(s, "assets/images/dialoghi/dialogo1.png");
+
     preload_platforms(s);
     preload_player(s);
 }
 
 function create(s) {
 
-    reset_npcs(); // Pulisce vecchi NPC se ricarichi la scena
+    reset_npcs(); 
 
     let start_x = 80;
     let start_y = 500;
@@ -104,15 +106,20 @@ function create(s) {
     PP.assets.sprite.animation_play(topo, "idle_topo");
     PP.physics.add(s, topo, PP.physics.type.STATIC);
 
-    // DIALOGO LOREM IPSUM
+    // DIALOGO COMPLETO
     let dialoghi_topo = [
-        { speaker: "npc", text: "Lorem ipsum dolor sit amet." },
-        { speaker: "player", text: "Consectetur adipiscing elit?" },
-        { speaker: "npc", text: "Sed do eiusmod tempor incididunt ut labore!" }
+        { speaker: "npc", text: "Coff coff… Grazie, ero intrappolato da ore…\nqualcuno deve avermi bloccato." },
+        { speaker: "player", text: "Il tubo deve aver ceduto, questo posto sta cadendo a pezzi\nper colpa delle tossine nell’acqua e della ruggine." },
+        { speaker: "npc", text: "Ma noi topi delle fogne viviamo qui da generazioni.\nLe acque sono diventate più dense, sì… ma così restano anche più calde d’inverno." },
+        { speaker: "player", text: "È veleno! Metalli pesanti, scarti chimici…\nTi confonde i sensi, ti indebolisce senza che tu te ne accorga." },
+        { speaker: "npc", text: "Effettivamente, sento le zampe sempre più pesanti ultimamente…\ne molti dei miei amici sono scomparsi nelle pozze più profonde…" },
+        { speaker: "player", text: "È tutto frutto dell’incantesimo che ha avvelenato la Fonte della Vita." },
+        { speaker: "npc", text: "La… Fonte? Quindi tutto questo - questo fango, questo buio,\nquesta fatica - non è la normalità?" },
+        { speaker: "player", text: "No. E posso rimediare, se arrivo in cima al Monte Tefnut." },
+        { speaker: "npc", text: "Allora vai. Ti devo la vita, Tillidak.\nFa’ tornare il mondo limpido… anche le nostre fogne." }
     ];
 
-    // REGISTRAZIONE NEL SISTEMA DIALOGHI
-    register_npc(topo, "Topo di Fognatura", dialoghi_topo);
+    register_npc(topo, "Topo", dialoghi_topo);
     // ============================================================
 
 
@@ -181,8 +188,24 @@ function create(s) {
 }
 
 function update(s) {
-    manage_npc_interaction(s, player); // Gestione input dialogo
-    manage_player_update(s, player);
+    // 1. GESTIONE INPUT DIALOGHI
+    manage_npc_interaction(s, player);
+
+    // 2. GESTIONE MOVIMENTO E IDLE
+    if (is_dialogue_active()) {
+        // --- SE PARLA: BLOCCA TUTTO ---
+        // Blocca la velocità
+        PP.physics.set_velocity_x(player, 0);
+        
+        // Forza animazione IDLE
+        // Nota: Assicurati che "idle" sia il nome corretto della tua animazione da fermo
+        PP.assets.sprite.animation_play(player, "idle");
+        
+    } else {
+        // --- SE NON PARLA: MUOVITI ---
+        // Eseguiamo il normale update del player solo se il dialogo è CHIUSO
+        manage_player_update(s, player);
+    }
 
     if(overlay && player) {
         overlay.geometry.x = player.geometry.x;
@@ -251,18 +274,16 @@ PP.scenes.add("lvl1_pt1", preload, create, update, destroy);
 // ==========================================================
 
 function register_npc(sprite_obj, name, dialogues) {
-    // Aggiungiamo le proprietà necessarie direttamente all'oggetto sprite
     sprite_obj.npc_name = name;
     sprite_obj.dialogues = dialogues;
     sprite_obj.interaction_range = NPC_INTERACTION_RANGE;
-    
     npc_list.push(sprite_obj);
 }
 
 function reset_npcs() {
     npc_list = [];
     close_dialogue_popup();
-    e_key_was_pressed = false;
+    action_key_was_pressed = false;
 }
 
 function is_player_near_npc(player, npc) {
@@ -287,40 +308,33 @@ function open_dialogue_popup(s, npc) {
     current_npc = npc;
     current_dialogue_index = 0;
     
-    let popup_width = 800;           
-    let popup_height = 150;           
-    let screen_center_x = 640;
-    let popup_y = 100;
+    // Coordinate
+    let screen_center_x = 0; 
+    let popup_y = 0; 
     
-    // Popup Sfondo
-    dialogue_popup = PP.shapes.rectangle_add(s, 0, 0, popup_width, popup_height, NPC_DIALOGUE_COLOR, 0.95);
+    // Sfondo
+    dialogue_popup = PP.assets.image.add(s, img_dialogue_bg, screen_center_x, popup_y, 0, 0);
+
+    dialogue_popup.visibility.alpha = 0.85;
+
     dialogue_popup.tile_geometry.scroll_factor_x = 0;
     dialogue_popup.tile_geometry.scroll_factor_y = 0;
-    dialogue_popup.geometry.x = screen_center_x;
-    dialogue_popup.geometry.y = popup_y;
-    PP.shapes.set_stroke(dialogue_popup, 3, "0x4a4a6a", 1);
     PP.layers.set_z_index(dialogue_popup, 10001);
     
-    let text_x = screen_center_x - popup_width/2 + 20; 
-    let text_y = popup_y - popup_height/2 + 20;
+    let text_padding_left = 260;  
+    let text_padding_top = 32;   
 
-    // Nome Speaker
-    dialogue_speaker = PP.shapes.text_styled_add(s, text_x, text_y, "", 20, "Arial", "bold", "0xffd700", null, 0, 0);
+    // Nome
+    dialogue_speaker = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top, "", 22, "Arial", "bold", "0x01AA03", null, 0, 0);
     dialogue_speaker.tile_geometry.scroll_factor_x = 0;
     dialogue_speaker.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_speaker, 10002);
     
-    // Testo Dialogo
-    dialogue_text = PP.shapes.text_styled_add(s, text_x, text_y + 35, "", 18, "Arial", "normal", "0xffffff", null, 0, 0);
+    // Testo
+    dialogue_text = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top + 55, "", 20, "Arial", "normal", "0xffffff", null, 0, 0);
     dialogue_text.tile_geometry.scroll_factor_x = 0;
     dialogue_text.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_text, 10002);
-    
-    // Tasto Hint (E)
-    dialogue_hint = PP.shapes.text_styled_add(s, screen_center_x + popup_width/2 - 20, text_y + 100, "[ E ]", 14, "Arial", "bold", "0x00ff88", null, 1, 0);
-    dialogue_hint.tile_geometry.scroll_factor_x = 0;
-    dialogue_hint.tile_geometry.scroll_factor_y = 0;
-    PP.layers.set_z_index(dialogue_hint, 10002);
     
     show_current_dialogue_line();
 }
@@ -332,27 +346,31 @@ function show_current_dialogue_line() {
     }
     
     let line = current_npc.dialogues[current_dialogue_index];
-    let speaker_name = (line.speaker === "npc") ? current_npc.npc_name + ":" : "Tu:";
+    // MODIFICA: Usiamo "Tillidak" invece di "Tu"
+    let speaker_name = (line.speaker === "npc") ? current_npc.npc_name : "Tillidak";
     
     PP.shapes.text_change(dialogue_speaker, speaker_name);
     PP.shapes.text_change(dialogue_text, line.text);
-    
-    if (current_dialogue_index >= current_npc.dialogues.length - 1) {
-        PP.shapes.text_change(dialogue_hint, "[ E per Chiudere ]");
-    } else {
-        PP.shapes.text_change(dialogue_hint, "[ E per Continuare ]");
-    }
 }
 
 function close_dialogue_popup() {
     if (!dialogue_active) return;
+    
+    console.log("CHIUSURA DIALOGO AVVIATA");
+    
     dialogue_active = false;
     current_npc = null;
     current_dialogue_index = 0;
     
-    if (dialogue_popup) { PP.shapes.destroy(dialogue_popup); dialogue_popup = null; }
+    // RIMUOVIAMO L'IMMAGINE IN MODO AGGRESSIVO
+    if (dialogue_popup) {
+        try { dialogue_popup.destroy(); } catch(e) {}
+        try { PP.shapes.destroy(dialogue_popup); } catch(e) {}
+        dialogue_popup = null;
+    }
+    
+    // Rimuoviamo i testi
     if (dialogue_text) { PP.shapes.destroy(dialogue_text); dialogue_text = null; }
-    if (dialogue_hint) { PP.shapes.destroy(dialogue_hint); dialogue_hint = null; }
     if (dialogue_speaker) { PP.shapes.destroy(dialogue_speaker); dialogue_speaker = null; }
 }
 
@@ -363,29 +381,27 @@ function advance_dialogue() {
 }
 
 function manage_npc_interaction(s, player) {
-    // Se ti muovi troppo, chiudi il dialogo
+    let e_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.E);
+    let down_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.DOWN);
+    
+    let is_input_active = false;
     if (dialogue_active) {
-        let vel_x = PP.physics.get_velocity_x(player);
-        if (Math.abs(vel_x) > 10) {
-            close_dialogue_popup();
-            return;
-        }
+        is_input_active = e_pressed || down_pressed;
+    } else {
+        is_input_active = e_pressed;
     }
     
-    let e_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.E);
-    
-    if (e_pressed && !e_key_was_pressed) {
+    if (is_input_active && !action_key_was_pressed) {
         if (dialogue_active) {
             advance_dialogue();
         } else {
             let nearby_npc = get_nearest_interactable_npc(player);
             if (nearby_npc) {
                 open_dialogue_popup(s, nearby_npc);
-                PP.physics.set_velocity_x(player, 0); // Ferma il player
             }
         }
     }
-    e_key_was_pressed = e_pressed;
+    action_key_was_pressed = is_input_active;
 }
 
 function is_dialogue_active() {
