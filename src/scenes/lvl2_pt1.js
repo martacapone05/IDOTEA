@@ -16,7 +16,7 @@ function preload(s) {
 
     img_background = PP.assets.image.load(s, "assets/images/sfondi/sfondo.png");
     img_info = PP.assets.image.load(s, "assets/images/info.png");
-    img_player = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_player.png", 165, 263);
+    img_player = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_player.png", 185, 294);
 
     preload_platforms(s);
     preload_player(s);
@@ -39,7 +39,7 @@ function create(s) {
     PP.physics.add(s, player, PP.physics.type.DYNAMIC);
 
     // *** MODIFICA COLLISIONE PLAYER ***
-    PP.physics.set_collision_rectangle(player, 123, 198, 18, 65);
+    PP.physics.set_collision_rectangle(player, 138, 230, 20, 64);
 
     floor = PP.shapes.rectangle_add(s, -300, 620, 2000, 10, "0x000000", 0);
     PP.physics.add(s, floor, PP.physics.type.STATIC);

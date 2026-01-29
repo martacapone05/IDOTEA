@@ -23,12 +23,12 @@ function create(s) {
     tavole_images = [];
     
     // Sfondo
-    tavole_bg = PP.shapes.rectangle_add(s, 640, 400, 1280, 800, "0x1a1a2e", 1);
+    tavole_bg = PP.shapes.rectangle_add(s, 640, 400, 1280, 800, "0xFFFFFF", 1);
     
     // Titolo
     tavole_title = PP.shapes.text_styled_add(s,
-        640, 50,
-        "TAVOLE",
+        640, 80,
+        "STORIA",
         50,
         "Georgia",
         "bold",
@@ -38,43 +38,43 @@ function create(s) {
     );
     
     // Mostra la prima tavola
-    tavole_display = PP.assets.image.add(s, tavole_img_loaded[0], 640, 400, 0.5, 0.5);
+    tavole_display = PP.assets.image.add(s, tavole_img_loaded[0], 640, 360, 0.5, 0.5);
     // Scala l'immagine per adattarla allo schermo se necessario
-    tavole_display.geometry.scale_x = 0.8;
-    tavole_display.geometry.scale_y = 0.8;
+    tavole_display.geometry.scale_x = 0.3;
+    tavole_display.geometry.scale_y = 0.3;
     
     // Contatore "1 / 3"
     tavole_counter = PP.shapes.text_styled_add(s,
-        640, 720,
+        640, 640,
         "1 / 3",
         30,
         "Georgia",
         "normal",
-        "0xFFFFFF",
+        "0x000000",
         null,
         0.5, 0.5
     );
     
     // Hint freccia sinistra
     tavole_hint_left = PP.shapes.text_styled_add(s,
-        100, 400,
+        100, 360,
         "<",
         60,
         "Georgia",
         "bold",
-        "0xFFFFFF",
+        "0x000000",
         null,
         0.5, 0.5
     );
     
     // Hint freccia destra
     tavole_hint_right = PP.shapes.text_styled_add(s,
-        1180, 400,
+        1180, 360,
         ">",
         60,
         "Georgia",
         "bold",
-        "0xFFFFFF",
+        "0x000000",
         null,
         0.5, 0.5
     );
@@ -139,9 +139,9 @@ function change_tavola(s) {
     }
     
     // Mostra nuova tavola
-    tavole_display = PP.assets.image.add(s, tavole_images[tavole_current], 640, 400, 0.5, 0.5);
-    tavole_display.geometry.scale_x = 0.8;
-    tavole_display.geometry.scale_y = 0.8;
+    tavole_display = PP.assets.image.add(s, tavole_images[tavole_current], 640, 360, 0.5, 0.5);
+    tavole_display.geometry.scale_x = 0.3;
+    tavole_display.geometry.scale_y = 0.3;
     
     // Aggiorna contatore
     PP.shapes.text_change(tavole_counter, (tavole_current + 1) + " / 3");

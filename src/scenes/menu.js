@@ -22,7 +22,7 @@ function create(s) {
     PP.shapes.text_styled_add(s, 
         PP.game.config.canvas_width / 2,
         200,
-        "Quando l'Immortalità andò Perduta",
+        "Idotea",
         50,
         "Georgia",
         "bold",
@@ -47,7 +47,7 @@ function create_menu_options(s) {
     }
     menu_options = [];
     
-    let labels = ["Gioca", "Tavole", "Crediti"];
+    let labels = ["Gioca", "Storia", "Crediti"];
     let yPositions = [420, 500, 580];
     
     for (let i = 0; i < 3; i++) {

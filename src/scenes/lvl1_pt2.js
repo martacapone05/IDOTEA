@@ -7,7 +7,7 @@ let img_info;
 
 // Variabili per oggetti animati
 let img_waterfall;
-let img_waterfall2; // Nuova variabile per la seconda spritesheet cascata
+let img_waterfall2; 
 let waterfall_segments = []; 
 let img_insegna_vertical;
 let img_condizionatore; 
@@ -37,26 +37,15 @@ function preload(s) {
     img_background4 = PP.assets.image.load(s, "assets/images/sfondi/sfondo4.png");
 
     img_info = PP.assets.image.load(s, "assets/images/info.png");
-    img_player = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_player.png", 165, 263);
+    img_player = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_player.png", 185, 294);
 
-    // Caricamento Cascata 1
     img_waterfall = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/waterfall1sprites.png", 119, 211);
-
-    // *** CARICAMENTO CASCATA 2 ***
-    // File: waterfall2sprites.png | Frame: 126x210
     img_waterfall2 = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/waterfall2sprites.png", 126, 210);
 
-    // Caricamento Insegna Verticale
     img_insegna_vertical = PP.assets.sprite.load_spritesheet(s, "assets/images/insegna_vertical.png", 173, 225);
-
-    // Caricamento Condizionatore
     img_condizionatore = PP.assets.sprite.load_spritesheet(s, "assets/images/condizionatore1.png", 132, 102);
-
-    // *** CARICAMENTO VENDING MACHINE ***
     img_vending_machine = PP.assets.sprite.load_spritesheet(s, "assets/images/vending_machine.png", 180, 365);
-
     img_cat = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_cat.png", 150, 150);
-    
     img_sgabelli = PP.assets.image.load(s, "assets/images/sgabelli.png");
 
     preload_platforms(s);
@@ -83,7 +72,7 @@ function create(s) {
     background4.tile_geometry.scroll_factor_x = 0;
     background4.tile_geometry.scroll_factor_y = 0;
 
-    // *** CASCATA ORIGINALE (Quella vecchia) ***
+    // *** CASCATA ORIGINALE (VISIVA) ***
     let wf_x = 3984;
     let wf_y_start = -2844; 
     let wf_y_end = -1711;
@@ -100,16 +89,14 @@ function create(s) {
         let anim_key = "flow_" + anim_counter;
         PP.assets.sprite.animation_add(seg, anim_key, 0, 7, 10, -1);
         PP.assets.sprite.animation_play(seg, anim_key);
-        
         PP.layers.set_z_index(seg, 30); 
-        
         waterfall_segments.push(seg);
         anim_counter++;
     }
 
-    // *** CASCATE AGGIUNTIVE TIPO 1 (Vecchia Sprite) ***
+    // *** CASCATE AGGIUNTIVE TIPO 1 ***
     let extra_wf_starts = [
-        {x: 2645, y: 853},
+        {x: 2465, y: 853},
         {x: 3149, y: 853}
     ];
 
@@ -120,17 +107,15 @@ function create(s) {
         for (let curr_y = start.y; curr_y < wf_limit_y; curr_y += step) {
             let seg = PP.assets.sprite.add(s, img_waterfall, start.x, curr_y, 0, 1);
             let anim_name = "flow_ext_" + extra_anim_counter;
-            
             PP.assets.sprite.animation_add(seg, anim_name, 0, 7, 10, -1);
             PP.assets.sprite.animation_play(seg, anim_name);
             PP.layers.set_z_index(seg, 30); 
-            
             waterfall_segments.push(seg); 
             extra_anim_counter++;
         }
     });
 
-    // *** NUOVE CASCATE TIPO 2 (Nuova Sprite) ***
+    // *** NUOVE CASCATE TIPO 2 ***
     let wf2_starts = [
         {x: 5183, y: 193},
         {x: 6387, y: -3414}
@@ -138,7 +123,7 @@ function create(s) {
 
     let wf2_limit_y = 1600; 
     let wf2_height = 210; 
-    let wf2_step = wf2_height - 15; // Distanza 195px
+    let wf2_step = wf2_height - 15; 
     let wf2_anim_counter = 0;
 
     wf2_starts.forEach(start => {
@@ -153,13 +138,13 @@ function create(s) {
         }
     });
  
-    // *** CREAZIONE INSEGNA VERTICALE ***
-    let insegna = PP.assets.sprite.add(s, img_insegna_vertical, 3428, -2286, 0, 1);
+    // INSEGNA
+    let insegna = PP.assets.sprite.add(s, img_insegna_vertical, 3665, -2112, 0, 1);
     PP.assets.sprite.animation_add(insegna, "play_insegna", 0, 9, 10, -1);
     PP.assets.sprite.animation_play(insegna, "play_insegna");
     PP.layers.set_z_index(insegna, 20);
 
-    // *** CREAZIONE CONDIZIONATORI MULTIPLI ***
+    // CONDIZIONATORI
     let posizioni_condizionatori = [
         {x: -12, y: 277},
         {x: 2858, y: -352},
@@ -170,7 +155,6 @@ function create(s) {
     ];
 
     let cond_anim_counter = 0;
-
     posizioni_condizionatori.forEach(pos => {
         let cond = PP.assets.sprite.add(s, img_condizionatore, pos.x, pos.y, 0, 1);
         let anim_name = "spin_" + cond_anim_counter;
@@ -180,32 +164,24 @@ function create(s) {
         cond_anim_counter++;
     });
 
-    // *** CREAZIONE VENDING MACHINE ***
+    // VENDING MACHINE
     let vm = PP.assets.sprite.add(s, img_vending_machine, 5117, -1984, 0, 1);
-    
-    // Animazione di 5 frame (0-4)
     PP.assets.sprite.animation_add(vm, "blink_vm", 0, 4, 10, -1);
     PP.assets.sprite.animation_play(vm, "blink_vm");
-    
     PP.layers.set_z_index(vm, 20);
 
-    let cat = PP.assets.sprite.add(s, img_cat, 4220, -2185, 0, 1);
-    
+    let cat = PP.assets.sprite.add(s, img_cat, 4209, -2103, 0, 1);
     PP.assets.sprite.animation_add(cat, "idle_cat", 0, 5, 10, -1);
     PP.assets.sprite.animation_play(cat, "idle_cat");
 
-    let sgabelli = PP.assets.image.add(s, img_sgabelli, 4039, -1982, 0, 1);
-
+    let sgabelli = PP.assets.image.add(s, img_sgabelli, 4203, -2045, 0, 1);
     PP.layers.set_z_index(cat, 20);
     PP.layers.set_z_index(sgabelli, 21);
 
 
     // *** GESTIONE PUNTO DI PARTENZA ***
-    let start_x = 4100;
+    let start_x = 4300;
     let start_y = -2000;
-
-    // let start_x = 100;
-    // let start_y = 550;
 
     if (PP.game_state.get_variable("punto_di_partenza") == "funivia_ritorno") {
         console.log("Spawn alla stazione della funivia (Ritorno)!");
@@ -214,12 +190,12 @@ function create(s) {
         PP.game_state.set_variable("punto_di_partenza", "inizio");
     }
 
-    // PLAYER
+    // ===============================================
+    // *** CREAZIONE PLAYER ***
+    // ===============================================
     player = PP.assets.sprite.add(s, img_player, start_x, start_y, 0.5, 1);
     PP.physics.add(s, player, PP.physics.type.DYNAMIC);
-
-    // *** MODIFICA COLLISIONE PLAYER ***
-    PP.physics.set_collision_rectangle(player, 123, 198, 18, 65);
+    PP.physics.set_collision_rectangle(player, 138, 230, 20, 64);
 
     // PAVIMENTO
     floor = PP.shapes.rectangle_add(s, -300, 640, 1400, 10, "0x000000", 0);
@@ -229,6 +205,29 @@ function create(s) {
     configure_player_animations(s, player);
     create_platforms_lvl1_pt2(s, player);
 
+    // ==========================================================
+    // *** COLLIDER DANNO CASCATA ***
+    // ==========================================================
+    let wf_height_total = Math.abs(wf_y_end - wf_y_start) + 200; 
+    let wf_center_y = wf_y_start + (wf_height_total / 2);
+    let wf_center_x = wf_x + (119 / 2); 
+
+    // Rettangolo invisibile per il danno
+    let wf_damage_zone = PP.shapes.rectangle_add(s, wf_center_x, wf_center_y, 90, wf_height_total, "0xFF0000", 0);
+    PP.physics.add(s, wf_damage_zone, PP.physics.type.STATIC);
+
+    PP.physics.add_overlap_f(s, player, wf_damage_zone, function(scene, p, zone) {
+        if (!p.invulnerable) {
+            // Spinta via (Knockback)
+            let knock_dir = (p.geometry.x < zone.geometry.x) ? -1 : 1;
+            PP.physics.set_velocity_x(p, -800 * knock_dir);
+            
+            // Chiama la funzione di danno
+            hit_player(s, p);
+        }
+    });
+    // ==========================================================
+
     // HUD
     create_hud(s, player);
 
@@ -236,7 +235,7 @@ function create(s) {
     create_collectible_fragment(s, 5750, -120, player);
     create_collectible_heart(s, 5450, -2100, player);
 
-    // --- ZONA FUNIVIA (ANDATA) ---
+    // ZONA FUNIVIA
     funivia_zone = PP.shapes.rectangle_add(s, 7099, -4180, 220, 253, "0x00FF00", 0.5);
     PP.physics.add(s, funivia_zone, PP.physics.type.STATIC);
     
@@ -250,13 +249,10 @@ function create(s) {
     // CAMERA
     PP.camera.start_follow(s, player, 0, -40);
 
-    // LIMITI TELECAMERA
-    // Poiché PP.camera.set_bounds non esiste, usiamo il metodo nativo sull'oggetto scena 's'
     if(s.cameras && s.cameras.main) {
         s.cameras.main.setBounds(-1232, -5125, 10000, 6500);
     }
 
-    // BARRIERE INVISIBILI
     let barrier_left = PP.shapes.rectangle_add(s, -1282, -1875, 100, 6500, "0x000000", 0);
     PP.physics.add(s, barrier_left, PP.physics.type.STATIC);
     PP.physics.add_collider(s, player, barrier_left);
@@ -267,8 +263,6 @@ function create(s) {
 
     player.cam_offset_x = 0;
     player.cam_target_x = 0;
-    
-    // Inizializzazione variabili Offset Y per la logica dinamica
     player.cam_offset_y = -40; 
     player.cam_target_y = -40;
 
@@ -294,21 +288,15 @@ function update(s) {
 
     player.cam_offset_x += (player.cam_target_x - player.cam_offset_x) * 0.03;
 
-    // *** LOGICA CAMERA Y DINAMICA ***
-    // Se il player è nel rettangolo (x: 2770->5690, y: -2490->-1900)
-    // Nota: Y è negativo in alto. -2490 è "più alto" (visivamente) di -1900.
+    // LOGICA CAMERA Y
     if (player.geometry.x > 2770 && player.geometry.x < 5690 &&
         player.geometry.y < -1900 && player.geometry.y > -2490) {
-        
-        // Alziamo la telecamera
-        player.cam_target_y = 250; 
+        player.cam_target_y = 200;
     } else {
-        player.cam_target_y = -40; // Default
+        player.cam_target_y = -40; 
     }
 
     player.cam_offset_y += (player.cam_target_y - player.cam_offset_y) * 0.02;
-
-    // Applicazione Offset X e Y
     PP.camera.set_follow_offset(s, player.cam_offset_x, player.cam_offset_y);
 
     background1.tile_geometry.x = PP.camera.get_scroll_x(s) * 0.1
@@ -316,7 +304,6 @@ function update(s) {
     background3.tile_geometry.x = PP.camera.get_scroll_x(s) * 0.2
     background4.tile_geometry.x = PP.camera.get_scroll_x(s) * 0.25
 
-    // Caduta nel vuoto -> Game Over
     if (player.geometry.y > 1600) {
         console.log("Caduto nel vuoto! Game Over...");
         PP.game_state.set_variable("last_scene", "lvl1_pt2");
@@ -330,6 +317,54 @@ function update(s) {
         PP.physics.set_velocity_y(player, 0);
         if (typeof update_cuore_graphic === "function") update_cuore_graphic(player);
         respawn_hearts(s, player);
+    }
+}
+
+// ==========================================================
+// *** FUNZIONE GESTIONE DANNO (HIT PLAYER) ***
+// ==========================================================
+function hit_player(s, player) {
+    if (player.invulnerable) return;
+
+    // Prendi le vite dal Game State Globale
+    let hp = PP.game_state.get_variable("player_hp");
+    hp = hp - 1;
+    PP.game_state.set_variable("player_hp", hp);
+    player.hp = hp; // Aggiorna anche variabile locale per sicurezza
+
+    console.log("Ahi! Vite rimaste: " + hp);
+    
+    // Aggiorna la grafica dei cuori
+    if(typeof update_cuore_graphic === "function") update_cuore_graphic(player);
+
+    if (hp <= 0) {
+        console.log("SEI MORTO!");
+        PP.game_state.set_variable("last_scene", "lvl1_pt2");
+        PP.scenes.start("game_over");  
+    } else {
+        PP.physics.set_velocity_y(player, -400); // Saltino di dolore
+        player.invulnerable = true;
+
+        // Effetto lampeggiante
+        function do_blink() {
+            if (player.invulnerable === false) {
+                player.visibility.alpha = 1;
+                return; 
+            }
+            if (player.visibility.alpha > 0.5) {
+                player.visibility.alpha = 0.2;
+            } else {
+                player.visibility.alpha = 1;
+            }
+            PP.timers.add_timer(s, 250, do_blink, false);
+        }
+        do_blink();
+
+        // Rimuovi invulnerabilità dopo 2 secondi
+        PP.timers.add_timer(s, 2000, function() {
+            player.invulnerable = false;
+            player.visibility.alpha = 1;
+        }, false);
     }
 }
 
