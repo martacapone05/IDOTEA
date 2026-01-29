@@ -18,6 +18,9 @@ let img_cat;
 let img_sgabelli;
 let img_muro_rompibile;
 
+// NUOVA VARIABILE SCALA
+let img_ladder_vera; 
+
 // SFONDO DIALOGO
 let img_dialogue_bg; 
 
@@ -94,6 +97,9 @@ function preload(s) {
     // CARICAMENTO MURO
     img_muro_rompibile = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_muro.png", 364, 354);
 
+    // CARICAMENTO SCALA VERA
+    img_ladder_vera = PP.assets.image.load(s, "assets/images/ladder_vera.png");
+
     // CARICAMENTO SFONDO DIALOGO
     img_dialogue_bg = PP.assets.image.load(s, "assets/images/dialoghi/dialogo1.png");
 
@@ -124,6 +130,13 @@ function create(s) {
     background4 = PP.assets.tilesprite.add(s, img_background4, 0, 0, 1280, 800, 0, 0);
     background4.tile_geometry.scroll_factor_x = 0;
     background4.tile_geometry.scroll_factor_y = 0;
+
+    // ===============================================
+    // *** SCALA PER TORNARE INDIETRO (-700, 1300) ***
+    // ===============================================
+    let ladder_exit = PP.assets.image.add(s, img_ladder_vera, -700, 1300, 0, 1);
+    PP.layers.set_z_index(ladder_exit, 20);
+    PP.physics.add(s, ladder_exit, PP.physics.type.STATIC);
 
     // *** CASCATA ORIGINALE (VISIVA) - QUELLA CHE DEVE SPARIRE ***
     let wf_x = 3984;
@@ -240,7 +253,10 @@ function create(s) {
 
 
     // *** GESTIONE PUNTO DI PARTENZA ***
-    let start_x = 4300;
+    // let start_x = -100;
+    // let start_y = 600;
+
+    let start_x = 4500;
     let start_y = -2000;
 
     if (PP.game_state.get_variable("punto_di_partenza") == "funivia_ritorno") {
@@ -265,6 +281,23 @@ function create(s) {
     configure_player_animations(s, player);
     create_platforms_lvl1_pt2(s, player);
 
+    // ===============================================
+    // *** LOGICA SCALA (SPOSTATA DOPO IL PLAYER) ***
+    // ===============================================
+    PP.physics.add_overlap_f(s, player, ladder_exit, function(scene, p, l) {
+        
+        // <<< MODIFICA RICHIESTA: ABILITA ARRAMPICATA >>>
+        p.can_climb = true; 
+        // ------------------------------------------
+
+        // Se preme E torna indietro
+        if (PP.interactive.kb.is_key_down(scene, PP.key_codes.E)) {
+            console.log("Torno al livello 1...");
+            PP.game_state.set_variable("punto_di_partenza", "fine");
+            PP.scenes.start("lvl1_pt1");
+        }
+    });
+
 
     // ===============================================
     // *** MURO ROMPIBILE ***
@@ -276,7 +309,7 @@ function create(s) {
     muro.is_broken = false;
     
     // *** Z-INDEX 25 ***
-    PP.layers.set_z_index(muro, 25); 
+    PP.layers.set_z_index(muro, 26); 
     
     PP.assets.sprite.animation_add(muro, "break", 0, 22, 10, 0);
     PP.assets.sprite.animation_add(muro, "idle", 0, 0, 1, 0);
@@ -285,14 +318,14 @@ function create(s) {
     
     s.muro_oggett = muro;
 
-    // *** SENSORE MURO RIDIMENSIONATO (CENTRO A 4734) ***
-    let sensore_width = 80;
-    let sensore_height = 300;
-    let sensore_x = 4694; // 4734 - (80/2)
-    let sensore_y = y_muro - 50; // Un po' più in basso rispetto a prima
+    // *** SENSORE MURO RIDIMENSIONATO
+    let sensore_width = 236;
+    let sensore_height = 252;
+    let sensore_x = 4734;
+    let sensore_y = -2175;
 
     let sensore = PP.shapes.rectangle_add(s, sensore_x, sensore_y, sensore_width, sensore_height, "0x00FF00", 0);
-    sensore.visibility.alpha = 0; 
+    sensore.visibility.alpha = 0;
     sensore.muro_collegato = muro;
     PP.physics.add(s, sensore, PP.physics.type.STATIC);
 
@@ -336,7 +369,7 @@ function create(s) {
     PP.physics.add(s, funivia_zone, PP.physics.type.STATIC);
     
     PP.physics.add_overlap_f(s, player, funivia_zone, function(scene, p, zone) {
-        if (PP.interactive.kb.is_key_down(scene, PP.key_codes.T)) {
+        if (PP.interactive.kb.is_key_down(scene, PP.key_codes.E)) {
             console.log("Andata con funivia -> lvl2_pt1");
             PP.scenes.start("lvl2_pt1");
         }
@@ -385,6 +418,10 @@ function update(s) {
         // Aspetta che l'animazione del muro finisca (2300ms)
         PP.timers.add_timer(s, 2300, function() {
             
+            // >>> MODIFICA RICHIESTA: DISTRUGGI IL MURO ALLA FINE DELL'ANIMAZIONE <<<
+            safe_destroy(s.muro_oggett); 
+            // -----------------------------------------------------------------------
+
             // A. CAMBIA DIALOGO GATTO -> FASE 2
             if (cat_npc_ref) {
                 cat_npc_ref.dialogues = dialoghi_gatto_fase2;
@@ -408,7 +445,7 @@ function update(s) {
 
                     let seg_off = PP.assets.sprite.add(s, img_waterfall_off, x, y, 0, 0);
                     // <<< ANIMAZIONE VELOCIZZATA A 20 FPS >>>
-                    PP.assets.sprite.animation_add(seg_off, "play_off", 0, 7, 20, 0);
+                    PP.assets.sprite.animation_add(seg_off, "play_off", 0, 7, 15, 0);
                     PP.assets.sprite.animation_play(seg_off, "play_off");
                     PP.layers.set_z_index(seg_off, 30);
 
@@ -421,7 +458,7 @@ function update(s) {
             });
 
             // D. NUOVA CASCATA CHE APPARE
-            let new_wf = PP.assets.sprite.add(s, img_waterfall_on, 4667, -2066, 0, 1);
+            let new_wf = PP.assets.sprite.add(s, img_waterfall_on, 4677, -2066, 0, 1);
             PP.layers.set_z_index(new_wf, 20);
             PP.assets.sprite.animation_add(new_wf, "appear", 0, 7, 10, 0);
             PP.assets.sprite.animation_play(new_wf, "appear");
@@ -429,7 +466,7 @@ function update(s) {
             PP.timers.add_timer(s, 800, function() {
                 safe_destroy(new_wf); 
                 
-                let final_wf = PP.assets.sprite.add(s, img_waterfall, 4667, -2066, 0, 1);
+                let final_wf = PP.assets.sprite.add(s, img_waterfall, 4677, -2066, 0, 1);
                 PP.layers.set_z_index(final_wf, 20);
                 PP.assets.sprite.animation_add(final_wf, "loop_forever", 0, 7, 10, -1);
                 PP.assets.sprite.animation_play(final_wf, "loop_forever");
@@ -635,7 +672,7 @@ function advance_dialogue() {
 
 function manage_npc_interaction(s, player) {
     let e_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.E);
-    let down_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.DOWN);
+    let down_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.SPACE);
     
     let is_input_active = false;
     if (dialogue_active) {

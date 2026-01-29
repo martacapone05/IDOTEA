@@ -62,7 +62,7 @@ function create(s) {
     // LOGICA DI RITORNO
     PP.physics.add_overlap_f(s, player, funivia_ritorno_zone, function(scene, p, zone) {
         
-        if (PP.interactive.kb.is_key_down(scene, PP.key_codes.T)) {
+        if (PP.interactive.kb.is_key_down(scene, PP.key_codes.E)) {
             console.log("Ritorno con la funivia -> lvl1_pt2");
             
             // *** IMPORTANTE: Diciamo al gioco che stiamo tornando indietro ***

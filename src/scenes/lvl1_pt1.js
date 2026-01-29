@@ -382,7 +382,7 @@ function advance_dialogue() {
 
 function manage_npc_interaction(s, player) {
     let e_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.E);
-    let down_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.DOWN);
+    let down_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.SPACE);
     
     let is_input_active = false;
     if (dialogue_active) {
