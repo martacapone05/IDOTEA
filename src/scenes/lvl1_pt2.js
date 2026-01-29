@@ -240,8 +240,8 @@ function create(s) {
 
 
     // *** GESTIONE PUNTO DI PARTENZA ***
-    let start_x = -100;
-    let start_y = 600;
+    let start_x = 4300;
+    let start_y = -2000;
 
     if (PP.game_state.get_variable("punto_di_partenza") == "funivia_ritorno") {
         console.log("Spawn alla stazione della funivia (Ritorno)!");
@@ -270,7 +270,7 @@ function create(s) {
     // *** MURO ROMPIBILE ***
     // ===============================================
     let x_muro = 4574;
-    let y_muro = -1984;
+    let y_muro = -2026;
     
     let muro = PP.assets.sprite.add(s, img_muro_rompibile, x_muro, y_muro, 0, 1);
     muro.is_broken = false;
@@ -286,10 +286,10 @@ function create(s) {
     s.muro_oggett = muro;
 
     // *** SENSORE MURO RIDIMENSIONATO (CENTRO A 4734) ***
-    let sensore_width = 236;
-    let sensore_height = 252;
-    let sensore_x = 4734;
-    let sensore_y = -2175;
+    let sensore_width = 80;
+    let sensore_height = 300;
+    let sensore_x = 4694; // 4734 - (80/2)
+    let sensore_y = y_muro - 50; // Un po' più in basso rispetto a prima
 
     let sensore = PP.shapes.rectangle_add(s, sensore_x, sensore_y, sensore_width, sensore_height, "0x00FF00", 0);
     sensore.visibility.alpha = 0; 
@@ -421,7 +421,7 @@ function update(s) {
             });
 
             // D. NUOVA CASCATA CHE APPARE
-            let new_wf = PP.assets.sprite.add(s, img_waterfall_on, 4677, -2066, 0, 1);
+            let new_wf = PP.assets.sprite.add(s, img_waterfall_on, 4667, -2066, 0, 1);
             PP.layers.set_z_index(new_wf, 20);
             PP.assets.sprite.animation_add(new_wf, "appear", 0, 7, 10, 0);
             PP.assets.sprite.animation_play(new_wf, "appear");
@@ -429,7 +429,7 @@ function update(s) {
             PP.timers.add_timer(s, 800, function() {
                 safe_destroy(new_wf); 
                 
-                let final_wf = PP.assets.sprite.add(s, img_waterfall, 4677, -2066, 0, 1);
+                let final_wf = PP.assets.sprite.add(s, img_waterfall, 4667, -2066, 0, 1);
                 PP.layers.set_z_index(final_wf, 20);
                 PP.assets.sprite.animation_add(final_wf, "loop_forever", 0, 7, 10, -1);
                 PP.assets.sprite.animation_play(final_wf, "loop_forever");
