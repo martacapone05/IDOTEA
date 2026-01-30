@@ -243,7 +243,7 @@ function create(s) {
         }
     });
 
-    PP.camera.start_follow(s, player, 0, -40);
+    PP.camera.start_follow(s, player, 0, 200);
     if(s.cameras && s.cameras.main) {
         s.cameras.main.setBounds(-1300, -2550, 17621, 6000); 
     }
@@ -415,7 +415,7 @@ function open_dialogue_popup(s, npc) {
     let text_padding_left = 260;  
     let text_padding_top = 32;   
 
-    dialogue_speaker = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top, "", 22, "Avenir", "bold", "0x01AA03", null, 0, 0);
+    dialogue_speaker = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top, "", 22, "Luminari", "bold", "0x01AA03", null, 0, 0);
     dialogue_speaker.tile_geometry.scroll_factor_x = 0;
     dialogue_speaker.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_speaker, 10002);

@@ -45,7 +45,7 @@ function create(s) {
 
 
     // SPAWN
-    let start_x = -200;
+    let start_x = 0;
     let start_y = 550;
 
     // Se arrivi dalla fine (es. livello successivo), cambi coordinate
@@ -66,7 +66,7 @@ function create(s) {
     PP.physics.set_collision_rectangle(player, 138, 230, 20, 64);
 
     // Pavimento base
-    floor = PP.shapes.rectangle_add(s, 0, 586, 2000, 10, "0x000000", 0);
+    floor = PP.shapes.rectangle_add(s, 0, 620, 2000, 10, "0x000000", 0);
     PP.physics.add(s, floor, PP.physics.type.STATIC);
     PP.physics.add_collider(s, player, floor);
 
@@ -85,9 +85,9 @@ function create(s) {
     // CAMERA SETUP
     PP.camera.start_follow(s, player, 0, -40);
 
-    if(s.cameras && s.cameras.main) {
-        s.cameras.main.setBounds(-375, -6720, 4800, 2000);
-    }
+    // if(s.cameras && s.cameras.main) {
+//         s.cameras.main.setBounds(-1000, -6720, 4800, 2000);
+   // }
 
     player.cam_offset_x = 0; 
     player.cam_target_x = 0;

@@ -102,7 +102,7 @@ function update_highlight(s) {
 
 function activate_menu_option(index) {
     if (index === 0) {
-        PP.scenes.start("lvl1_pt1");
+        PP.scenes.start("lvl3");
     } else if (index === 1) {
         PP.scenes.start("tavole");
     } else if (index === 2) {
@@ -113,12 +113,12 @@ function activate_menu_option(index) {
 }
 
 function update(s) {
-    let up_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.UP);
-    let down_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.DOWN);
+    let left_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.LEFT);
+    let right_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.RIGHT);
     let space_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.SPACE);
     let enter_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.ENTER);
     
-    let any_key = up_pressed || down_pressed || space_pressed || enter_pressed;
+    let any_key = left_pressed || right_pressed || space_pressed || enter_pressed;
     
     // Reset flag quando nessun tasto è premuto
     if (!any_key) {
@@ -127,7 +127,7 @@ function update(s) {
     
     if (!menu_key_was_pressed) {
         // Navigazione su
-        if (up_pressed) {
+        if (left_pressed) {
             menu_selected--;
             if (menu_selected < 0) menu_selected = 3;
             update_highlight(s);
@@ -135,7 +135,7 @@ function update(s) {
         }
         
         // Navigazione giù
-        if (down_pressed) {
+        if (right_pressed) {
             menu_selected++;
             if (menu_selected > 3) menu_selected = 0;
             update_highlight(s);
