@@ -45,7 +45,7 @@ function create(s) {
 
 
     // SPAWN
-    let start_x = 0;
+    let start_x = -200;
     let start_y = 550;
 
     // Se arrivi dalla fine (es. livello successivo), cambi coordinate
@@ -85,6 +85,10 @@ function create(s) {
     // CAMERA SETUP
     PP.camera.start_follow(s, player, 0, -40);
 
+    if(s.cameras && s.cameras.main) {
+        s.cameras.main.setBounds(-375, -6720, 4800, 2000);
+    }
+
     player.cam_offset_x = 0; 
     player.cam_target_x = 0;
     
@@ -113,12 +117,11 @@ function update(s) {
     player.cam_offset_x += (player.cam_target_x - player.cam_offset_x) * 0.03;
 
     // CAMERA INTERPOLATION Y
-    PP.camera.set_follow_offset(s, player.cam_offset_x, -40);
+    PP.camera.set_follow_offset(s, player.cam_offset_x, 120);
 
     // GESTIONE PARALLASSE
     let scroll_x = PP.camera.get_scroll_x(s);
-    background1.tile_geometry.x = scroll_x * 0.1; // Più lento (lontano)
-    background2.tile_geometry.x = scroll_x * 0.5; // Più veloce (vicino)
+    background2.tile_geometry.x = scroll_x * 0.1; // Più veloce (vicino)
 
     // Caduta nel vuoto -> Game Over
     if (player.geometry.y > 1600) {

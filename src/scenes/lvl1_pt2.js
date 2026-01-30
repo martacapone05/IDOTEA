@@ -375,9 +375,7 @@ function create(s) {
     // CAMERA
     PP.camera.start_follow(s, player, 0, -40);
 
-    if(s.cameras && s.cameras.main) {
-        s.cameras.main.setBounds(-1232, -5125, 10000, 6500);
-    }
+    if(s.cameras && s.cameras.main) {s.cameras.main.setBounds(-1232, -5125, 10000, 6500)}
 
     let barrier_left = PP.shapes.rectangle_add(s, -1282, -1875, 100, 6500, "0x000000", 0);
     PP.physics.add(s, barrier_left, PP.physics.type.STATIC);

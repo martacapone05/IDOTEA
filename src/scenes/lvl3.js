@@ -26,8 +26,8 @@ function create(s) {
     background.tile_geometry.scroll_factor_y = 0;
 
     // SPAWN
-    let start_x = -1920;
-    let start_y = 510;
+    let start_x = 1500;
+    let start_y = -6400;
 
     // Se arrivi dalla fine (es. livello successivo), cambi coordinate
     if (PP.game_state.get_variable("punto_di_partenza") == "fine") {
@@ -94,6 +94,7 @@ function update(s) {
     // CAMERA INTERPOLATION Y
     PP.camera.set_follow_offset(s, player.cam_offset_x, -40);
 
+    background.tile_geometry.x = PP.camera.get_scroll_x(s) * 1;
     background.tile_geometry.x = PP.camera.get_scroll_x(s) * 1;
 
     // Caduta nel vuoto -> Game Over

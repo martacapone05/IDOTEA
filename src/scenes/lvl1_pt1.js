@@ -160,7 +160,7 @@ function create(s) {
 
     // Camera
     PP.camera.start_follow(s, player, 0, 100);
-    if(s.cameras && s.cameras.main) s.cameras.main.setBounds(0, -2100, 12000, 3500);
+    if(s.cameras && s.cameras.main) {s.cameras.main.setBounds(0, -2100, 12000, 3500)}
 
     let barrier_left = PP.shapes.rectangle_add(s, -50, -350, 100, 3500, "0x000000", 0);
     PP.physics.add(s, barrier_left, PP.physics.type.STATIC);
