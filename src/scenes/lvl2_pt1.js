@@ -23,9 +23,9 @@ function preload(s) {
     preload_hud(s); 
 
     // CARICAMENTO SFONDI PARALLASSE
-    img_background1 = PP.assets.image.load(s, "assets/images/sfondi/sfondo5.png");
-    img_background2 = PP.assets.image.load(s, "assets/images/sfondi/sfondo6.png");
-    img_background3 = PP.assets.image.load(s, "assets/images/sfondi/sfondo7.png");
+    img_background1 = PP.assets.image.load(s, "assets/images/sfondi/sfondo10.png");
+    img_background2 = PP.assets.image.load(s, "assets/images/sfondi/sfondo11.png");
+    img_background3 = PP.assets.image.load(s, "assets/images/sfondi/sfondo12.png");
 
     img_info = PP.assets.image.load(s, "assets/images/info.png");
     img_player = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_player.png", 185, 294);
@@ -52,6 +52,8 @@ function create(s) {
     background3.tile_geometry.scroll_factor_x = 0;
     background3.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(background3, -8);
+
+    background3.visibility.alpha = 0.4;
 
 
     // PUNTO DI PARTENZA
@@ -143,11 +145,9 @@ function update(s) {
     // Sfondo 5 (Lontano) - Si muove piano (0.1)
     background1.tile_geometry.x = scroll_x * 0.1;
     
-    // Sfondo 6 (Medio) - Si muove un po' più veloce (0.2)
     background2.tile_geometry.x = scroll_x * 0.2;
     
-    // Sfondo 7 (Vicino) - Si muove più veloce (0.5)
-    background3.tile_geometry.x = scroll_x * 0.5;
+    background3.tile_geometry.x = scroll_x * 0;
 
 
     // Caduta nel vuoto -> Game Over

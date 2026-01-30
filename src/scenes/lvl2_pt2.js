@@ -1,8 +1,14 @@
-let img_background;
+// VARIABILI IMMAGINI SFONDO
+let img_background1; // sfondo8
+let img_background2; // sfondo9
+
 let img_player;
 let img_info;
 
-let background;
+// VARIABILI OGGETTI SFONDO
+let background1;
+let background2;
+
 let info;
 let player;
 let floor;
@@ -11,7 +17,10 @@ function preload(s) {
 
     preload_hud(s);
 
-    img_background = PP.assets.image.load(s, "assets/images/sfondi/sfondo.png");
+    // CARICAMENTO SFONDI PARALLASSE
+    img_background1 = PP.assets.image.load(s, "assets/images/sfondi/sfondo8.png");
+    img_background2 = PP.assets.image.load(s, "assets/images/sfondi/sfondo9.png");
+
     img_info = PP.assets.image.load(s, "assets/images/info.png");
     img_player = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_player.png", 185, 294);
 
@@ -21,9 +30,19 @@ function preload(s) {
 
 function create(s) {
 
-    background = PP.assets.tilesprite.add(s, img_background, 0, 0, 1280, 800, 0, 0);
-    background.tile_geometry.scroll_factor_x = 0;
-    background.tile_geometry.scroll_factor_y = 0;
+    // CREAZIONE SFONDI PARALLASSE (Z-INDEX NEGATIVO)
+    // Sfondo più lontano (sfondo8)
+    background1 = PP.assets.tilesprite.add(s, img_background1, 0, 0, 1280, 800, 0, 0);
+    background1.tile_geometry.scroll_factor_x = 0;
+    background1.tile_geometry.scroll_factor_y = 0;
+    PP.layers.set_z_index(background1, -10);
+
+    // Sfondo più vicino (sfondo9)
+    background2 = PP.assets.tilesprite.add(s, img_background2, 0, 0, 1280, 800, 0, 0);
+    background2.tile_geometry.scroll_factor_x = 0;
+    background2.tile_geometry.scroll_factor_y = 0;
+    PP.layers.set_z_index(background2, -9);
+
 
     // SPAWN
     let start_x = 0;
@@ -31,7 +50,7 @@ function create(s) {
 
     // Se arrivi dalla fine (es. livello successivo), cambi coordinate
     if (PP.game_state.get_variable("punto_di_partenza") == "fine") {
-        start_x = 0; // Modifica qui se serve uno spawn diverso per il ritorno
+        start_x = 0; 
         start_y = 550;
         PP.game_state.set_variable("punto_di_partenza", "inizio");
     } else {
@@ -47,7 +66,7 @@ function create(s) {
     PP.physics.set_collision_rectangle(player, 138, 230, 20, 64);
 
     // Pavimento base
-    floor = PP.shapes.rectangle_add(s, 0, 620, 2000, 10, "0x000000", 0);
+    floor = PP.shapes.rectangle_add(s, 0, 586, 2000, 10, "0x000000", 0);
     PP.physics.add(s, floor, PP.physics.type.STATIC);
     PP.physics.add_collider(s, player, floor);
 
@@ -96,7 +115,10 @@ function update(s) {
     // CAMERA INTERPOLATION Y
     PP.camera.set_follow_offset(s, player.cam_offset_x, -40);
 
-    background.tile_geometry.x = PP.camera.get_scroll_x(s) * 1;
+    // GESTIONE PARALLASSE
+    let scroll_x = PP.camera.get_scroll_x(s);
+    background1.tile_geometry.x = scroll_x * 0.1; // Più lento (lontano)
+    background2.tile_geometry.x = scroll_x * 0.5; // Più veloce (vicino)
 
     // Caduta nel vuoto -> Game Over
     if (player.geometry.y > 1600) {

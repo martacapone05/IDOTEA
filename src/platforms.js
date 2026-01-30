@@ -7,7 +7,7 @@ let img_blocchetto1, img_blocchetto2, img_blocchetto3, img_blocchetto4, img_bloc
     img_blocchetto29, img_blocchetto30, img_blocchetto31, img_blocchetto32, img_blocchetto33, img_blocchetto34, img_blocchetto35,
     img_blocchetto36, img_blocchetto37, img_blocchetto38, img_blocchetto39, img_blocchetto40, img_blocchetto41, img_blocchetto42,
     img_blocchetto43, img_blocchetto44, img_blocchetto45, img_blocchetto46, img_blocchetto47, img_blocchetto48, img_blocchetto49,
-    img_blocchetto50;
+    img_blocchetto50, img_blocchetto51;
 
 let img_blocco1, img_blocco2, img_blocco3, img_blocco4a, img_blocco4b, img_blocco4, img_blocco5, img_blocco6, img_blocco7,
     img_blocco8, img_blocco9, img_blocco10, img_blocco11, img_blocco12, img_blocco13, img_blocco14, img_blocco15;
@@ -87,6 +87,7 @@ function preload_platforms(s) {
     img_blocchetto48 = PP.assets.image.load(s, "assets/images/blocchetti/blocchetto48.png");
     img_blocchetto49 = PP.assets.image.load(s, "assets/images/blocchetti/blocchetto49.png");
     img_blocchetto50 = PP.assets.image.load(s, "assets/images/blocchetti/blocchetto50.png");
+    img_blocchetto51 = PP.assets.image.load(s, "assets/images/blocchetti/blocchetto51.png");
 
     img_blocco1 = PP.assets.image.load(s, "assets/images/blocchi/blocco1.png");
     img_blocco2 = PP.assets.image.load(s, "assets/images/blocchi/blocco2.png");
@@ -643,30 +644,30 @@ function create_platforms_lvl2_pt1(s, player) {
 function create_platforms_lvl2_pt2(s, player) {
     let blocco_supremo1 = PP.assets.image.add(s, img_blocco_supremo1, -500, 340, 0, 1);
     let platform1 = PP.assets.image.add(s, img_platform8, 1200, 800, 0, 1);
-    let blocco1 = PP.assets.image.add(s, img_blocco7, 1850, 2000, 0, 1);
-    let blocchetto1 = PP.assets.image.add(s, img_blocchetto1, 2400, 500, 0, 1);
+    let blocco1 = PP.assets.image.add(s, img_blocco7, 1850, 1996, 0, 1);
+    let blocchetto1 = PP.assets.image.add(s, img_blocchetto1, 2400, 494, 0, 1);
     let blocchetto2 = PP.assets.image.add(s, img_blocchetto2, 3100, 500, 0, 1);
-    let blocchetto3 = PP.assets.image.add(s, img_blocchetto7, 3030, 0, 0, 1);
+    let blocchetto3 = PP.assets.image.add(s, img_blocchetto7, 3030, -3, 0, 1);
     let blocchetto4 = PP.assets.image.add(s, img_blocchetto11, 3450, -80, 0, 1);
-    let blocchetto5 = PP.assets.image.add(s, img_blocchetto7, 3390, -280, 0, 1);
+    let blocchetto5 = PP.assets.image.add(s, img_blocchetto7, 3390, -289, 0, 1);
     let blocco_supremo2 = PP.assets.image.add(s, img_blocco_supremo2, 3700, 500, 0, 1);
     let platform2 = PP.assets.image.add(s, img_platform13, 3600, -607, 0, 1);
     let blocchetto6 = PP.assets.image.add(s, img_blocchetto23, 3050, -700, 0, 1);
-    let platform3 = PP.assets.image.add(s, img_platform3, 2350, -850, 0, 1);
-    let platform4 = PP.assets.image.add(s, img_platform14, 1650, -950, 0, 1);
-    let platform5 = PP.assets.image.add(s, img_platform14, 950, -1000, 0, 1);
+    let platform3 = PP.assets.image.add(s, img_platform3, 2367, -1008, 0, 1);
+    let platform4 = PP.assets.image.add(s, img_platform3, 1639, -1007, 0, 1);
+    let platform5 = PP.assets.image.add(s, img_platform3, 912, -1031, 0, 1);
     let blocchetto7 = PP.assets.image.add(s, img_blocchetto41, 0, -1200, 0, 1);
     let blocchetto8 = PP.assets.image.add(s, img_blocchetto11, 0, -1260, 0, 1);
     let platform6 = PP.assets.image.add(s, img_platform15, 550, -1800, 0, 1);
     let platform7 = PP.assets.image.add(s, img_platform16, 1200, -2050, 0, 1);
-    let platform8 = PP.assets.image.add(s, img_platform17, 2000, -2200, 0, 1);
-    let blocchetto9 = PP.assets.image.add(s, img_blocchetto42, 2700, -2250, 0, 1);
-    let blocchetto10 = PP.assets.image.add(s, img_blocchetto43, 2620, -3230, 0, 1);
-    let blocchetto11 = PP.assets.image.add(s, img_blocchetto43, 3350, -3230, 0, 1);
+    let platform8 = PP.assets.image.add(s, img_platform17, 2000, -2203, 0, 1);
+    let blocchetto9 = PP.assets.image.add(s, img_blocchetto42, 2700, -2252, 0, 1);
+    let blocchetto10 = PP.assets.image.add(s, img_blocchetto43, 2620, -3237, 0, 1);
+    let blocchetto11 = PP.assets.image.add(s, img_blocchetto43, 3350, -3238, 0, 1);
     let platform9 = PP.assets.image.add(s, img_platform18, 2000, -3050, 0, 1);
     let platform10 = PP.assets.image.add(s, img_platform18, 1300, -3150, 0, 1);
-    let blocco2 = PP.assets.image.add(s, img_blocco12, -100, -3200, 0, 1);
-    let blocco3 = PP.assets.image.add(s, img_blocco13, 400, -3651, 0, 1);
+    let blocco2 = PP.assets.image.add(s, img_blocco12, -100, -3202, 0, 1);
+    let blocco3 = PP.assets.image.add(s, img_blocchetto51, 400, -3651, 0, 1);
     let platform11 = PP.assets.image.add(s, img_platform13, -100, -3650, 0, 1);
     let platform12 = PP.assets.image.add(s, img_platform13, 300, -3950, 0, 1);
     let platform13 = PP.assets.image.add(s, img_platform13, -100, -4250, 0, 1);
