@@ -145,14 +145,6 @@ function create(s) {
         p.near_breakable_wall = true;
         p.current_wall = obj_sensore.muro_collegato; 
     };
-        
-    // AGGIUNGI SOLO QUESTE RIGHE QUI SOTTO
-    if (PP.interactive.kb.is_key_down(s, PP.key_codes.R) && !obj_sensore.muro_collegato.is_broken) {
-        let muri = PP.game_state.get_variable("muri_rotti") || 0;
-        PP.game_state.set_variable("muri_rotti", muri + 1);
-    }
-
-
     PP.physics.add_overlap_f(s, player, sensore, on_sensore_overlap);
 
 
