@@ -361,14 +361,15 @@ function create(s) {
     create_collectible_fragment(s, 5750, -120, player);
     create_collectible_heart(s, 5450, -2100, player);
 
-    // ZONA FUNIVIA
+   // ZONA FUNIVIA
     funivia_zone = PP.shapes.rectangle_add(s, 7099, -4180, 220, 253, "0x00FF00", 0.5);
     PP.physics.add(s, funivia_zone, PP.physics.type.STATIC);
     
     PP.physics.add_overlap_f(s, player, funivia_zone, function(scene, p, zone) {
         if (PP.interactive.kb.is_key_down(scene, PP.key_codes.E)) {
-            console.log("Andata con funivia -> lvl2_pt1");
-            PP.scenes.start("lvl2_pt1");
+            console.log("Andata con funivia -> animazione transizione");
+            // *** MODIFICA QUI ***
+            PP.scenes.start("animazione_transizione"); 
         }
     });
 
@@ -634,7 +635,7 @@ function open_dialogue_popup(s, npc) {
     let text_padding_left = 260;  
     let text_padding_top = 32;   
 
-    dialogue_speaker = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top, "", 22, "Luminari", "bold", "0x01AA03", null, 0, 0);
+    dialogue_speaker = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top, "", 22, "Luminari", "bold", "0xb3c9c9", null, 0, 0);
     dialogue_speaker.tile_geometry.scroll_factor_x = 0;
     dialogue_speaker.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_speaker, 10002);

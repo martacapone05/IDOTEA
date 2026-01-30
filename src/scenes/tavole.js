@@ -23,25 +23,14 @@ function create(s) {
     // Sfondo bianco
     tavole_bg = PP.shapes.rectangle_add(s, 640, 400, 1280, 800, "0xFFFFFF", 1);
     
-    // Titolo
-    tavole_title = PP.shapes.text_styled_add(s,
-        640, 60,
-        "STORIA",
-        50,
-        "Georgia",
-        "bold",
-        "0x000000", // Colore nero perché sfondo bianco
-        null,
-        0.5, 0.5
-    );
     
     // --- CREAZIONE SPRITE TAVOLE ---
-    tavole_sprite = PP.assets.sprite.add(s, img_tavole_spritesheet, 640, 420, 0.5, 0.5);
+    tavole_sprite = PP.assets.sprite.add(s, img_tavole_spritesheet, 640, 355, 0.5, 0.5);
     
     // Adattamento scala (l'immagine è molto grande)
     // 1640 * 0.42 = ~688px altezza (sta bene in 800px)
-    tavole_sprite.geometry.scale_x = 0.42;
-    tavole_sprite.geometry.scale_y = 0.42;
+    tavole_sprite.geometry.scale_x = 0.48;
+    tavole_sprite.geometry.scale_y = 0.48;
 
     // --- DEFINIZIONE ANIMAZIONI ---
     // Frame 0-14 totali

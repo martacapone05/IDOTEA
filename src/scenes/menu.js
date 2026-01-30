@@ -102,7 +102,7 @@ function update_highlight(s) {
 
 function activate_menu_option(index) {
     if (index === 0) {
-        PP.scenes.start("lvl3");
+        PP.scenes.start("lvl2_pt1");
     } else if (index === 1) {
         PP.scenes.start("tavole");
     } else if (index === 2) {

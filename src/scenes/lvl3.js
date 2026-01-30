@@ -236,7 +236,7 @@ function create(s) {
         max_y: -6000  // Un po' sotto i piedi
     };
 
-    PP.assets.sprite.animation_add(avvoltoio, "idle", 0, 4, 10, -1); 
+    PP.assets.sprite.animation_add(avvoltoio, "idle", 0, 4, 6, -1); 
     PP.assets.sprite.animation_add(avvoltoio, "fly", 5, 19, 10, -1); 
     PP.assets.sprite.animation_play(avvoltoio, "idle");
     
