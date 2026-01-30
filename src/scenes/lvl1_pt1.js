@@ -325,13 +325,13 @@ function open_dialogue_popup(s, npc) {
     let text_padding_top = 32;   
 
     // Nome
-    dialogue_speaker = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top, "", 22, "Arial", "bold", "0x01AA03", null, 0, 0);
+    dialogue_speaker = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top, "", 22, "Avenir", "bold", "0x01AA03", null, 0, 0);
     dialogue_speaker.tile_geometry.scroll_factor_x = 0;
     dialogue_speaker.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_speaker, 10002);
     
     // Testo
-    dialogue_text = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top + 55, "", 20, "Arial", "normal", "0xffffff", null, 0, 0);
+    dialogue_text = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top + 55, "", 20, "Avenir", "normal", "0xffffff", null, 0, 0);
     dialogue_text.tile_geometry.scroll_factor_x = 0;
     dialogue_text.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_text, 10002);

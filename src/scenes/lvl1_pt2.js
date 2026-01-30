@@ -101,7 +101,7 @@ function preload(s) {
     img_ladder_vera = PP.assets.image.load(s, "assets/images/ladder_vera.png");
 
     // CARICAMENTO SFONDO DIALOGO
-    img_dialogue_bg = PP.assets.image.load(s, "assets/images/dialoghi/dialogo1.png");
+    img_dialogue_bg = PP.assets.image.load(s, "assets/images/dialoghi/dialogo2.png");
 
     preload_platforms(s);
     preload_player(s);
@@ -253,11 +253,8 @@ function create(s) {
 
 
     // *** GESTIONE PUNTO DI PARTENZA ***
-    // let start_x = -100;
-    // let start_y = 600;
-
-    let start_x = 4500;
-    let start_y = -2000;
+    let start_x = -100;
+    let start_y = 600;
 
     if (PP.game_state.get_variable("punto_di_partenza") == "funivia_ritorno") {
         console.log("Spawn alla stazione della funivia (Ritorno)!");
@@ -492,11 +489,25 @@ function update(s) {
     player.cam_offset_x += (player.cam_target_x - player.cam_offset_x) * 0.03;
 
     // LOGICA CAMERA Y
-    if (player.geometry.x > 2770 && player.geometry.x < 5690 &&
-        player.geometry.y < -1900 && player.geometry.y > -2490) {
+
+    if (player.geometry.x > 2000 && player.geometry.x < 5700 &&
+        player.geometry.y < -1700 && player.geometry.y > -2500) {
         player.cam_target_y = 200;
-    } else {
-        player.cam_target_y = -40; 
+    }
+    else if (player.geometry.x > 4900 && player.geometry.x < 5690 &&
+    player.geometry.y < 200 && player.geometry.y > -600) {
+    player.cam_target_y = -40;
+    }
+    else if (player.geometry.x > 2000 && player.geometry.x < 5700 &&
+    player.geometry.y < -3550 && player.geometry.y > -4200) {
+    player.cam_target_y = -40;
+    }
+    else if (player.geometry.x > 2000 && player.geometry.x < 5700 &&
+    player.geometry.y < -3550 && player.geometry.y > -4200) {
+    player.cam_target_y = -40;
+    }
+    else if (player.geometry.x > 5750 && player.geometry.x < 8500) {
+        player.cam_target_y = 200;
     }
 
     player.cam_offset_y += (player.cam_target_y - player.cam_offset_y) * 0.02;
@@ -625,12 +636,12 @@ function open_dialogue_popup(s, npc) {
     let text_padding_left = 260;  
     let text_padding_top = 32;   
 
-    dialogue_speaker = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top, "", 22, "Arial", "bold", "0x01AA03", null, 0, 0);
+    dialogue_speaker = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top, "", 22, "Avenir", "bold", "0x01AA03", null, 0, 0);
     dialogue_speaker.tile_geometry.scroll_factor_x = 0;
     dialogue_speaker.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_speaker, 10002);
     
-    dialogue_text = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top + 55, "", 20, "Arial", "normal", "0xffffff", null, 0, 0);
+    dialogue_text = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top + 55, "", 20, "Avenir", "normal", "0xffffff", null, 0, 0);
     dialogue_text.tile_geometry.scroll_factor_x = 0;
     dialogue_text.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_text, 10002);

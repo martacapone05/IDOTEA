@@ -1,4 +1,4 @@
-let player_speed = 550;
+let player_speed = 560;
 let jump_speed = 1350;
 let floor_height = 620; 
 let climb_speed = 450; 
@@ -20,7 +20,7 @@ function configure_player_animations(s, player) {
     // Il parametro -1 alla fine significa "loop infinito" (continua a ripetersi)
     PP.assets.sprite.animation_add_list(player, "idle", [24, 25, 26, 25], 4, -1);
     
-    PP.assets.sprite.animation_add(player, "climb", 27, 34, 8, -1);
+    PP.assets.sprite.animation_add(player, "climb", 27, 33, 8, -1);
     PP.assets.sprite.animation_add_list(player, "piccone", [19, 20, 21, 22, 23, 22, 21, 20, 19], 12, 1);
 
     player.hp = 4;                  

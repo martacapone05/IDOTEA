@@ -105,7 +105,7 @@ function update(s) {
             
             if (menu_selected === 0) {
                 // GIOCA
-                PP.scenes.start("lvl2_pt1");
+                PP.scenes.start("lvl1_pt2");
             } else if (menu_selected === 1) {
                 // TAVOLE
                 PP.scenes.start("tavole");
