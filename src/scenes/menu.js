@@ -1,33 +1,31 @@
 let img_copertina;
+let img_btn_gioca;
+let img_btn_storia;
+let img_btn_comandi;
+let img_btn_crediti;
+
 let menu_selected = 0; // 0 = Gioca, 1 = Storia, 2 = Comandi, 3 = Crediti
-let menu_hitboxes = [];
-let menu_highlight_layers = []; // Array di rettangoli per effetto sfumato
+let menu_buttons = []; // Array per i bottoni immagine
 let menu_key_was_pressed = false;
 let menu_scene_ref = null;
 
-// Configurazione sfumatura highlight
-let layers_config = [
-    { expand: 30, alpha: 0.05 },  // Layer esterno - molto trasparente
-    { expand: 22, alpha: 0.10 },
-    { expand: 15, alpha: 0.15 },
-    { expand: 10, alpha: 0.20 },
-    { expand: 5,  alpha: 0.25 },  // Layer interno - più opaco
+// COORDINATE DEI BOTTONI (centro X, centro Y)
+let button_positions = [
+    { x: 609, y: 671 },   // GIOCA
+    { x: 774, y: 671 },   // STORIA
+    { x: 965, y: 671 },   // COMANDI
+    { x: 1162, y: 671 }   // CREDITI
 ];
 
-// Colore highlight (modifica qui)
-let highlight_color = "0x1E90FF";
-
-// COORDINATE DEI BOTTONI NEL PNG (centro X, centro Y, larghezza, altezza)
-// Modifica questi valori per allinearli ai bottoni nella copertina
-let button_configs = [
-    { x: 610, y: 670, w: 120, h: 35 },  // GIOCA
-    { x: 775, y: 672, w: 115, h: 35 },  // STORIA
-    { x: 966, y: 670, w: 160, h: 35 },  // COMANDI
-    { x: 1163, y: 670, w: 130, h: 35 }   // CREDITI
-];
+// Scala dei bottoni (regola se troppo grandi/piccoli)
+let button_scale = 0.038;
 
 function preload(s) {
     img_copertina = PP.assets.image.load(s, "assets/images/copertina.png");
+    img_btn_gioca = PP.assets.image.load(s, "assets/images/btn_gioca.png");
+    img_btn_storia = PP.assets.image.load(s, "assets/images/btn_storia.png");
+    img_btn_comandi = PP.assets.image.load(s, "assets/images/btn_comandi.png");
+    img_btn_crediti = PP.assets.image.load(s, "assets/images/btn_crediti.png");
 }
 
 function create(s) {
@@ -43,62 +41,52 @@ function create(s) {
     PP.game_state.set_variable("HP", 3);
 
     menu_selected = 0;
-    menu_hitboxes = [];
-    menu_highlight_layers = [];
+    menu_buttons = [];
     
-    // Crea highlight iniziale
-    create_highlight_layers(s, button_configs[0]);
+    // Array delle immagini bottoni
+    let btn_images = [img_btn_gioca, img_btn_storia, img_btn_comandi, img_btn_crediti];
     
-    // Crea hitbox invisibili per ogni bottone
-    for (let i = 0; i < button_configs.length; i++) {
-        let cfg = button_configs[i];
-        let hitbox = PP.shapes.rectangle_add(s, cfg.x, cfg.y, cfg.w, cfg.h, "0xFF0000", 0);
-        hitbox.button_index = i;
+    // Crea i bottoni immagine
+    for (let i = 0; i < button_positions.length; i++) {
+        let pos = button_positions[i];
+        let btn = PP.assets.image.add(s, btn_images[i], pos.x, pos.y, 0.5, 0.5);
+        btn.geometry.scale_x = button_scale;
+        btn.geometry.scale_y = button_scale;
+        btn.button_index = i;
         
         // Aggiungi interazione mouse
-        PP.interactive.mouse.add(hitbox, "pointerover", function() {
+        PP.interactive.mouse.add(btn, "pointerover", function() {
             menu_selected = i;
-            update_highlight(s);
+            update_button_highlight();
         });
         
-        PP.interactive.mouse.add(hitbox, "pointerdown", function() {
+        PP.interactive.mouse.add(btn, "pointerdown", function() {
             activate_menu_option(menu_selected);
         });
         
-        menu_hitboxes.push(hitbox);
+        menu_buttons.push(btn);
     }
+    
+    // Evidenzia il primo bottone
+    update_button_highlight();
     
     menu_key_was_pressed = true;
 }
 
-function create_highlight_layers(s, cfg) {
-    // Distruggi layer esistenti
-    for (let i = 0; i < menu_highlight_layers.length; i++) {
-        if (menu_highlight_layers[i]) {
-            PP.shapes.destroy(menu_highlight_layers[i]);
+// Funzione per evidenziare il bottone selezionato
+function update_button_highlight() {
+    for (let i = 0; i < menu_buttons.length; i++) {
+        if (i === menu_selected) {
+            // Bottone selezionato: scala più grande e alpha pieno
+            menu_buttons[i].geometry.scale_x = button_scale * 1.15;
+            menu_buttons[i].geometry.scale_y = button_scale * 1.15;
+            menu_buttons[i].visibility.alpha = 1;
+        } else {
+            // Bottoni non selezionati: scala normale e leggermente trasparenti
+            menu_buttons[i].geometry.scale_x = button_scale;
+            menu_buttons[i].geometry.scale_y = button_scale;
+            menu_buttons[i].visibility.alpha = 0.7;
         }
-    }
-    menu_highlight_layers = [];
-    
-    // Crea nuovi layer con le dimensioni del bottone selezionato
-    for (let i = 0; i < layers_config.length; i++) {
-        let lc = layers_config[i];
-        let layer = PP.shapes.rectangle_add(s, 
-            cfg.x, 
-            cfg.y, 
-            cfg.w + lc.expand * 2, 
-            cfg.h + lc.expand, 
-            highlight_color,
-            lc.alpha
-        );
-        PP.layers.set_z_index(layer, 99 + i);
-        menu_highlight_layers.push(layer);
-    }
-}
-
-function update_highlight(s) {
-    if (button_configs[menu_selected]) {
-        create_highlight_layers(s, button_configs[menu_selected]);
     }
 }
 
@@ -128,19 +116,19 @@ function update(s) {
     }
     
     if (!menu_key_was_pressed) {
-        // Navigazione su
+        // Navigazione sinistra
         if (left_pressed) {
             menu_selected--;
             if (menu_selected < 0) menu_selected = 3;
-            update_highlight(s);
+            update_button_highlight();
             menu_key_was_pressed = true;
         }
         
-        // Navigazione giù
+        // Navigazione destra
         if (right_pressed) {
             menu_selected++;
             if (menu_selected > 3) menu_selected = 0;
-            update_highlight(s);
+            update_button_highlight();
             menu_key_was_pressed = true;
         }
         
@@ -153,8 +141,7 @@ function update(s) {
 }
 
 function destroy(s) {
-    menu_highlight_layers = [];
-    menu_hitboxes = [];
+    menu_buttons = [];
     menu_scene_ref = null;
 }
 
