@@ -87,6 +87,18 @@ function create(s) {
         0.5, 0.5
     );
     
+    // ESC con freccia in alto a destra
+    PP.shapes.text_styled_add(s,
+        1200, 50,
+        "← ESC",
+        28,
+        "Georgia",
+        "bold",
+        "0x6B2D8C",
+        null,
+        0.5, 0.5
+    );
+    
     tavole_key_was_pressed = true;
     update_ui_visibility();
 }

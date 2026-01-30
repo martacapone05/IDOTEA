@@ -29,9 +29,7 @@ function create(s) {
         "↑  -  Arrampicati sulle scale",
         "SPAZIO  -  Salta",
         "E  -  Interagisci / Parla con NPC",
-        "R  -  Rompi muri (quando vicino)",
-        "",
-        "ESC  -  Torna al menu"
+        "R  -  Rompi muri (quando vicino)"
     ];
     
     let y_start = 200;
@@ -50,14 +48,14 @@ function create(s) {
         );
     }
     
-    // Hint per tornare indietro
+    // ESC con freccia in alto a destra
     PP.shapes.text_styled_add(s,
-        640, 650,
-        "Premi ESC, SPAZIO o ENTER per tornare al menu",
-        20,
+        1200, 50,
+        "← ESC",
+        28,
         "Georgia",
-        "italic",
-        "0x888888",
+        "bold",
+        "0x6B2D8C",
         null,
         0.5, 0.5
     );

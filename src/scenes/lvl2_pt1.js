@@ -100,6 +100,9 @@ function preload(s) {
 
 function create(s) {
 
+    // Checkpoint: salva questo livello come punto di respawn
+    PP.game_state.set_variable("last_scene", "lvl2_pt1");
+
     reset_npcs();
     has_spoken_to_pecora = false;
     wall_broken_pecora = false;
@@ -238,6 +241,7 @@ function create(s) {
     // *** 10. HUD E CAMERA ***
     // ===============================================
     create_hud(s, player); 
+    create_pause_button(s, player);
     create_collectible_fragment(s, 1200, 470, player);
     create_collectible_heart(s, 1700, 470, player);
 
@@ -252,9 +256,6 @@ function create(s) {
     });
 
     PP.camera.start_follow(s, player, 0, 120);
-    if(s.cameras && s.cameras.main) {
-        s.cameras.main.setBounds(-1300, -2550, 17621, 6000); 
-    }
     
     // BARRIERE
     let barrier_left = PP.shapes.rectangle_add(s, -1350, -800, 100, 5000, "0x000000", 0);
@@ -280,6 +281,16 @@ function create(s) {
 
 
 function update(s) {
+    // CAMERA BOUNDS
+    PP.camera.set_bounds(s, -1300, -2550, 17621, 6000);
+
+    // 0. GESTIONE MENU PAUSA
+    manage_pause_input(s);
+    if (is_game_paused()) {
+        PP.physics.set_velocity_x(player, 0);
+        PP.physics.set_velocity_y(player, 0);
+        return;
+    }
     
     // RESET FLAG custom
     // GESTIONE DIALOGHI (TASTO E)

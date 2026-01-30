@@ -81,6 +81,10 @@ function preload(s) {
 
 function create(s) {
     scene_ref = s; 
+
+    // Checkpoint: salva questo livello come punto di respawn
+    PP.game_state.set_variable("last_scene", "lvl3");
+
     reset_npcs();
     has_spoken_to_avvoltoio = false;
     is_player_attacking = false;
@@ -125,7 +129,7 @@ function create(s) {
         PP.physics.add_overlap_f(s, player, sensore, function(scene, p, zone) {
             if (has_spoken_to_avvoltoio) {
                 p.current_column = zone.colonna_collegata;
-                p.last_column_touch_time = s.time.now;
+                p.last_column_touch_time = PP.timers.get_time(scene);
             }
         });
         return col;
@@ -147,7 +151,7 @@ function create(s) {
         PP.physics.add_overlap_f(s, player, sensore, function(scene, p, zone) {
             if (has_spoken_to_avvoltoio) {
                 p.current_column = zone.colonna_collegata;
-                p.last_column_touch_time = s.time.now;
+                p.last_column_touch_time = PP.timers.get_time(scene);
             }
         });
         return col;
@@ -175,11 +179,9 @@ function create(s) {
     register_npc(avvoltoio, "Avvoltoio", dialogo_avvoltoio);
 
     create_hud(s, player);
+    create_pause_button(s, player);
     PP.camera.start_follow(s, player, 0, 120);
 
-    if(s.cameras && s.cameras.main) {
-        s.cameras.main.setBounds(-1970, -7500, 8600, 8830);
-    }
 
     PP.camera.set_deadzone(s, 10, 50);
 
@@ -190,6 +192,17 @@ function create(s) {
 }
 
 function update(s) {
+    // CAMERA BOUNDS
+    PP.camera.set_bounds(s, -1970, -7500, 8600, 8830);
+
+    // 0. GESTIONE MENU PAUSA
+    manage_pause_input(s);
+    if (is_game_paused()) {
+        PP.physics.set_velocity_x(player, 0);
+        PP.physics.set_velocity_y(player, 0);
+        return;
+    }
+
     manage_npc_interaction(s, player);
 
     // --- TRIGGER RITORNO A LVL2_PT2 ---
@@ -199,7 +212,7 @@ function update(s) {
     }
 
     if (avvoltoio_flying) {
-        let elapsed = s.time.now - fly_start_time;
+        let elapsed = PP.timers.get_time(s) - fly_start_time;
         let t = Math.min(1, elapsed / fly_duration);
         let current_x = current_fly_start.x + (current_fly_end.x - current_fly_start.x) * t;
         let linear_y = current_fly_start.y + (current_fly_end.y - current_fly_start.y) * t;
@@ -220,7 +233,7 @@ function update(s) {
     }
 
     if (PP.interactive.kb.is_key_down(s, PP.key_codes.R)) {
-        let is_near_column = (s.time.now - player.last_column_touch_time) < 100;
+        let is_near_column = (PP.timers.get_time(s) - player.last_column_touch_time) < 100;
         if (!is_player_attacking && is_near_column && has_spoken_to_avvoltoio && player.current_column && !player.current_column.is_broken) {
             is_player_attacking = true;
             player.is_acting = true; 
@@ -235,7 +248,7 @@ function update(s) {
                         else if (avvoltoio_stage === 2) { avvoltoio_stage = 3; current_fly_start = fly_pos_3_start; current_fly_end = fly_pos_3_end; current_fly_height = 300; }
                         else if (avvoltoio_stage === 3) { avvoltoio_stage = 4; current_fly_start = fly_pos_4_start; current_fly_end = fly_pos_4_end; current_fly_height = 300; }
                         else if (avvoltoio_stage === 4) { avvoltoio_stage = 5; current_fly_start = fly_pos_escape_start; current_fly_end = fly_pos_escape_end; current_fly_height = -300; }
-                        fly_start_time = s.time.now;
+                        fly_start_time = PP.timers.get_time(s);
                         avvoltoio_flying = true;
                         PP.assets.sprite.animation_play(avvoltoio, "fly");
                     }, false);
@@ -311,7 +324,7 @@ function show_current_dialogue_line() {
         close_dialogue_popup();
         if(name === "Avvoltoio") {
             avvoltoio_stage = 1; current_fly_start = fly_pos_1_start; current_fly_end = fly_pos_1_end;
-            avvoltoio_flying = true; fly_start_time = scene_ref.time.now;
+            avvoltoio_flying = true; fly_start_time = PP.timers.get_time(scene_ref);
             PP.assets.sprite.animation_play(avvoltoio, "fly");
         }
         return;

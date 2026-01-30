@@ -56,6 +56,9 @@ function create(s) {
     PP.layers.set_z_index(primo_pianolvl2_2, 40);
     PP.layers.set_z_index(sottolvl2_pt2, -4);
 
+    // Checkpoint: salva questo livello come punto di respawn
+    PP.game_state.set_variable("last_scene", "lvl2_pt2");
+
     // ===============================================
     // *** GENERAZIONE CASCATE (CORRETTE) ***
     // ===============================================
@@ -125,14 +128,12 @@ function create(s) {
     }
 
     create_hud(s, player);
+    create_pause_button(s, player);
     create_collectible_fragment(s, 1200, 470, player);
     create_collectible_heart(s, 1700, 470, player);
 
     PP.camera.start_follow(s, player, 0, -40);
 
-    if(s.cameras && s.cameras.main) {
-        s.cameras.main.setBounds(-350, -6720, 5000, 8720);
-    }
 
     player.cam_offset_x = 0; 
     player.cam_target_x = 0;
@@ -148,6 +149,17 @@ function create(s) {
 }
 
 function update(s) {
+    // CAMERA BOUNDS
+    PP.camera.set_bounds(s, -350, -6720, 5000, 8720);
+
+    // 0. GESTIONE MENU PAUSA
+    manage_pause_input(s);
+    if (is_game_paused()) {
+        PP.physics.set_velocity_x(player, 0);
+        PP.physics.set_velocity_y(player, 0);
+        return;
+    }
+
     manage_player_update(s, player);    
 
     // --- LOGICA PASSAGGI DI LIVELLO ---
