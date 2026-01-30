@@ -90,13 +90,24 @@ function create(s) {
     let start_x = 0;
     let start_y = 550;
 
-    if (PP.game_state.get_variable("punto_di_partenza") == "fine") {
+    let punto = PP.game_state.get_variable("punto_di_partenza");
+
+    // Ritorno da lvl3 (backtracking)
+    if (punto == "fine") {
         start_x = 4300; 
         start_y = -4500;
         PP.game_state.set_variable("punto_di_partenza", "inizio");
-    } else {
-        PP.game_state.set_variable("player_hp", 4);
-        PP.game_state.set_variable("player_fragments", 0);
+    }
+    // Arrivo da lvl2_pt1 (andando avanti)
+    else if (punto == "avanti_da_pt1") {
+        start_x = 0;
+        start_y = 550;
+        PP.game_state.set_variable("punto_di_partenza", "inizio");
+    }
+    // Fallback per compatibilità
+    else {
+        start_x = 0;
+        start_y = 550;
     }
 
     player = PP.assets.sprite.add(s, img_player, start_x, start_y, 0.5, 1);

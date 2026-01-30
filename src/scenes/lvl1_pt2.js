@@ -256,17 +256,30 @@ function create(s) {
     let start_x = -100;
     let start_y = 600;
 
-    // Ritorno dal Livello 2 (Pecora/Montagna)
-    if (PP.game_state.get_variable("punto_di_partenza") == "funivia_ritorno") {
+    let punto = PP.game_state.get_variable("punto_di_partenza");
+
+    // Ritorno dal Livello 2 (Pecora/Montagna) tramite funivia
+    if (punto == "funivia_ritorno") {
         start_x = 7099; 
         start_y = -4000;
         PP.game_state.set_variable("punto_di_partenza", "inizio");
     } 
-    // Arrivo dal Livello 1 pt1 (Scala)
-    else if (PP.game_state.get_variable("punto_di_partenza") == "fine") {
+    // Arrivo dal Livello 1 pt1 (andando avanti)
+    else if (punto == "arrivo_da_pt1") {
         start_x = -100;
         start_y = 600;
         PP.game_state.set_variable("punto_di_partenza", "inizio");
+    }
+    // Ritorno dal Livello 1 pt1 (backtracking dalla scala)
+    else if (punto == "fine") {
+        start_x = -700;
+        start_y = 1300;
+        PP.game_state.set_variable("punto_di_partenza", "inizio");
+    }
+    // Fallback per compatibilità (spawn default)
+    else {
+        start_x = -100;
+        start_y = 600;
     }
 
     // *** CREAZIONE PLAYER ***
@@ -722,21 +735,9 @@ function is_dialogue_active() {
 function safe_destroy(obj) {
     if (!obj) return;
     
-    // Prova 1: Metodo destroy diretto
-    if (typeof obj.destroy === 'function') {
-        obj.destroy();
-        return;
-    }
-    
-    // Prova 2: Oggetto Phaser interno
-    if (obj.ph_obj && typeof obj.ph_obj.destroy === 'function') {
-        obj.ph_obj.destroy();
-        return;
-    }
-    
-    // Prova 3: Se è uno sprite interno
-    if (obj.sprite && typeof obj.sprite.destroy === 'function') {
-        obj.sprite.destroy();
+    // Usa il metodo corretto di PoliPhaser per distruggere asset
+    if (obj.ph_obj) {
+        PP.assets.destroy(obj);
         return;
     }
 

@@ -135,10 +135,18 @@ function create(s) {
     let start_x = -373; 
     let start_y = 500;
 
+    let punto = PP.game_state.get_variable("punto_di_partenza");
 
-    if (PP.game_state.get_variable("punto_di_partenza") == "fine") {
-        start_x = 0; 
-        start_y = 550;
+    // Arrivo dalla funivia (da lvl1_pt2 -> animazione_transizione -> lvl2_pt1)
+    if (punto == "funivia_arrivo") {
+        start_x = -373; 
+        start_y = 500;
+        PP.game_state.set_variable("punto_di_partenza", "inizio");
+    }
+    // Ritorno da lvl2_pt2 (backtracking)
+    else if (punto == "fine") {
+        start_x = 15800; 
+        start_y = -1100;
         PP.game_state.set_variable("punto_di_partenza", "inizio");
     }
 
@@ -355,7 +363,8 @@ function update(s) {
     }
 
     if (player.geometry.x > 15930) {
-    PP.scenes.start("lvl2_pt2");
+        PP.game_state.set_variable("punto_di_partenza", "avanti_da_pt1");
+        PP.scenes.start("lvl2_pt2");
     }
 
 }
@@ -455,8 +464,8 @@ function close_dialogue_popup() {
     
     // RIMUOVI LO SFONDO (VIGNETTA)
     if (dialogue_popup) {
-        // Usiamo il metodo universale di PoliPhaser per distruggere asset/immagini
-        PP.assets.image.remove(dialogue_popup); 
+        // Usiamo PP.assets.destroy che è il metodo corretto in PoliPhaser
+        PP.assets.destroy(dialogue_popup); 
         dialogue_popup = null;
     }
     
@@ -507,9 +516,12 @@ function is_dialogue_active() {
 
 function safe_destroy(obj) {
     if (!obj) return;
-    if (typeof obj.destroy === 'function') { obj.destroy(); return; }
-    if (obj.ph_obj && typeof obj.ph_obj.destroy === 'function') { obj.ph_obj.destroy(); return; }
-    if (obj.sprite && typeof obj.sprite.destroy === 'function') { obj.sprite.destroy(); return; }
+    // Usa il metodo corretto di PoliPhaser per distruggere asset
+    if (obj.ph_obj) {
+        PP.assets.destroy(obj);
+        return;
+    }
+    // Fallback: Nascondi e sposta via
     if (obj.visibility) obj.visibility.alpha = 0;
     if (obj.geometry) obj.geometry.y = 10000;
 }

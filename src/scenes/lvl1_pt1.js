@@ -260,6 +260,7 @@ function update(s) {
     }
 
     if (player.geometry.y < -2100) {
+        PP.game_state.set_variable("punto_di_partenza", "arrivo_da_pt1");
         PP.scenes.start("lvl1_pt2");
     }
 }
@@ -362,10 +363,9 @@ function close_dialogue_popup() {
     current_npc = null;
     current_dialogue_index = 0;
     
-    // RIMUOVIAMO L'IMMAGINE IN MODO AGGRESSIVO
+    // Usiamo PP.assets.destroy che è il metodo corretto in PoliPhaser
     if (dialogue_popup) {
-        try { dialogue_popup.destroy(); } catch(e) {}
-        try { PP.shapes.destroy(dialogue_popup); } catch(e) {}
+        PP.assets.destroy(dialogue_popup);
         dialogue_popup = null;
     }
     

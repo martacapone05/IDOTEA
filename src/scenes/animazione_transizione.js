@@ -20,6 +20,8 @@ function create(s) {
 
     PP.timers.add_timer(s, duration_ms, function() {
         console.log("Animazione finita, vado al livello 2!");
+        // Imposta il punto di partenza per lo spawn corretto in lvl2_pt1
+        PP.game_state.set_variable("punto_di_partenza", "funivia_arrivo");
         PP.scenes.start("lvl2_pt1");
     }, false);
 }
