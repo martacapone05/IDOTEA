@@ -32,6 +32,8 @@ function preload(s) {
 
 function create(s) {
     menu_scene_ref = s;
+
+    PP.game_state.set_variable("muri_rotti", 0);
     
     // Sfondo copertina
     PP.assets.image.add(s, img_copertina, 0, 0, 0, 0);
@@ -102,7 +104,7 @@ function update_highlight(s) {
 
 function activate_menu_option(index) {
     if (index === 0) {
-        PP.scenes.start("lvl2_pt1");
+        PP.scenes.start("lvl1_pt1");
     } else if (index === 1) {
         PP.scenes.start("tavole");
     } else if (index === 2) {

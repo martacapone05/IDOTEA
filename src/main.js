@@ -15,7 +15,7 @@ game_div.style.top = "50%";
 game_div.style.left = "50%";
 game_div.style.transform = "translate(-50%, -50%)";
 
-document.body.style.backgroundColor = "#ffffff";
+document.body.style.backgroundColor = "#000000";
 document.body.style.margin = "0";
 document.body.style.overflow = "hidden"; // Toglie le barre di scorrimento
 
