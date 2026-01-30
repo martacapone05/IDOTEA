@@ -256,6 +256,7 @@ function create(s) {
     let start_x = -100;
     let start_y = 600;
 
+    // Se torniamo dal Lvl 2 (stazione funivia)
     if (PP.game_state.get_variable("punto_di_partenza") == "funivia_ritorno") {
         console.log("Spawn alla stazione della funivia (Ritorno)!");
         start_x = 7099; 
@@ -264,7 +265,7 @@ function create(s) {
     }
 
     // ===============================================
-    // *** CREAZIONE PLAYER (SPOSTATO PRIMA DEL MURO) ***
+    // *** CREAZIONE PLAYER ***
     // ===============================================
     player = PP.assets.sprite.add(s, img_player, start_x, start_y, 0.5, 1);
     PP.physics.add(s, player, PP.physics.type.DYNAMIC);
@@ -362,13 +363,12 @@ function create(s) {
     create_collectible_heart(s, 5450, -2100, player);
 
    // ZONA FUNIVIA
-    funivia_zone = PP.shapes.rectangle_add(s, 7099, -4180, 220, 253, "0x00FF00", 0.5);
+    funivia_zone = PP.shapes.rectangle_add(s, 7099, -4180, 220, 253, "0x00FF00", 0);
     PP.physics.add(s, funivia_zone, PP.physics.type.STATIC);
     
     PP.physics.add_overlap_f(s, player, funivia_zone, function(scene, p, zone) {
         if (PP.interactive.kb.is_key_down(scene, PP.key_codes.E)) {
-            console.log("Andata con funivia -> animazione transizione");
-            // *** MODIFICA QUI ***
+            console.log("Andata con funivia -> lvl2_pt1");
             PP.scenes.start("animazione_transizione"); 
         }
     });
@@ -414,9 +414,10 @@ function update(s) {
         // Aspetta che l'animazione del muro finisca (2300ms)
         PP.timers.add_timer(s, 2300, function() {
             
-            // >>> MODIFICA RICHIESTA: DISTRUGGI IL MURO ALLA FINE DELL'ANIMAZIONE <<<
             safe_destroy(s.muro_oggett); 
-            // -----------------------------------------------------------------------
+
+            let muri = PP.game_state.get_variable("muri_rotti") || 0;
+            PP.game_state.set_variable("muri_rotti", muri + 1);
 
             // A. CAMBIA DIALOGO GATTO -> FASE 2
             if (cat_npc_ref) {
@@ -488,7 +489,6 @@ function update(s) {
     player.cam_offset_x += (player.cam_target_x - player.cam_offset_x) * 0.03;
 
     // LOGICA CAMERA Y
-
     if (player.geometry.x > 2000 && player.geometry.x < 5700 &&
         player.geometry.y < -1700 && player.geometry.y > -2500) {
         player.cam_target_y = 200;
@@ -497,15 +497,7 @@ function update(s) {
     player.geometry.y < 200 && player.geometry.y > -600) {
     player.cam_target_y = -40;
     }
-    else if (player.geometry.x > 2000 && player.geometry.x < 5700 &&
-    player.geometry.y < -3550 && player.geometry.y > -4200) {
-    player.cam_target_y = -40;
-    }
-    else if (player.geometry.x > 2000 && player.geometry.x < 5700 &&
-    player.geometry.y < -3550 && player.geometry.y > -4200) {
-    player.cam_target_y = -40;
-    }
-    else if (player.geometry.x > 5750 && player.geometry.x < 8500) {
+    else if (player.geometry.x > 6400 && player.geometry.x < 8500) {
         player.cam_target_y = 200;
     }
 
@@ -521,15 +513,6 @@ function update(s) {
         console.log("Caduto nel vuoto! Game Over...");
         PP.game_state.set_variable("last_scene", "lvl1_pt2");
         PP.scenes.start("game_over");
-        
-        player.geometry.x = 0;
-        player.geometry.y = 550;
-        player.hp = 4;
-        PP.game_state.set_variable("player_hp", 4);
-        PP.physics.set_velocity_x(player, 0);
-        PP.physics.set_velocity_y(player, 0);
-        if (typeof update_cuore_graphic === "function") update_cuore_graphic(player);
-        respawn_hearts(s, player);
     }
 }
 
@@ -543,13 +526,10 @@ function hit_player(s, player) {
     hp = hp - 1;
     PP.game_state.set_variable("player_hp", hp);
     player.hp = hp; 
-
-    console.log("Ahi! Vite rimaste: " + hp);
     
     if(typeof update_cuore_graphic === "function") update_cuore_graphic(player);
 
     if (hp <= 0) {
-        console.log("SEI MORTO!");
         PP.game_state.set_variable("last_scene", "lvl1_pt2");
         PP.scenes.start("game_over");  
     } else {
@@ -623,26 +603,17 @@ function open_dialogue_popup(s, npc) {
     
     has_spoken_to_cat = true; 
 
-    let screen_center_x = 0; 
-    let popup_y = 0; 
-    
-    dialogue_popup = PP.assets.image.add(s, img_dialogue_bg, screen_center_x, popup_y, 0, 0);
-    dialogue_popup.visibility.alpha = 0.85;
+    dialogue_popup = PP.assets.image.add(s, img_dialogue_bg, 0, 0, 0, 0);
     dialogue_popup.tile_geometry.scroll_factor_x = 0;
     dialogue_popup.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_popup, 10001);
     
-    let text_padding_left = 260;  
-    let text_padding_top = 32;   
-
-    dialogue_speaker = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top, "", 22, "Luminari", "bold", "0xb3c9c9", null, 0, 0);
+    dialogue_speaker = PP.shapes.text_styled_add(s, 260, 32, "", 22, "Luminari", "bold", "0xb3c9c9", null, 0, 0);
     dialogue_speaker.tile_geometry.scroll_factor_x = 0;
-    dialogue_speaker.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_speaker, 10002);
     
-    dialogue_text = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top + 55, "", 20, "Avenir", "normal", "0xffffff", null, 0, 0);
+    dialogue_text = PP.shapes.text_styled_add(s, 260, 87, "", 20, "Avenir", "normal", "0xffffff", null, 0, 0);
     dialogue_text.tile_geometry.scroll_factor_x = 0;
-    dialogue_text.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_text, 10002);
     
     show_current_dialogue_line();
@@ -653,11 +624,8 @@ function show_current_dialogue_line() {
         close_dialogue_popup();
         return;
     }
-    
     let line = current_npc.dialogues[current_dialogue_index];
-    let speaker_name = (line.speaker === "npc") ? current_npc.npc_name : "Tillidak";
-    
-    PP.shapes.text_change(dialogue_speaker, speaker_name);
+    PP.shapes.text_change(dialogue_speaker, (line.speaker === "npc") ? current_npc.npc_name : "Tillidak");
     PP.shapes.text_change(dialogue_text, line.text);
 }
 
@@ -666,71 +634,29 @@ function close_dialogue_popup() {
     dialogue_active = false;
     current_npc = null;
     current_dialogue_index = 0;
-    
     safe_destroy(dialogue_popup);
-    dialogue_popup = null;
-    
-    if (dialogue_text) { PP.shapes.destroy(dialogue_text); dialogue_text = null; }
-    if (dialogue_speaker) { PP.shapes.destroy(dialogue_speaker); dialogue_speaker = null; }
-}
-
-function advance_dialogue() {
-    if (!dialogue_active) return;
-    current_dialogue_index++;
-    show_current_dialogue_line();
+    if (dialogue_text) PP.shapes.destroy(dialogue_text);
+    if (dialogue_speaker) PP.shapes.destroy(dialogue_speaker);
 }
 
 function manage_npc_interaction(s, player) {
-    let e_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.E);
-    let down_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.SPACE);
-    
-    let is_input_active = false;
-    if (dialogue_active) {
-        is_input_active = e_pressed || down_pressed;
-    } else {
-        is_input_active = e_pressed;
-    }
-    
-    if (is_input_active && !action_key_was_pressed) {
+    let input = PP.interactive.kb.is_key_down(s, PP.key_codes.E);
+    if (input && !action_key_was_pressed) {
         if (dialogue_active) {
-            advance_dialogue();
+            current_dialogue_index++;
+            show_current_dialogue_line();
         } else {
             let nearby_npc = get_nearest_interactable_npc(player);
-            if (nearby_npc) {
-                open_dialogue_popup(s, nearby_npc);
-            }
+            if (nearby_npc) open_dialogue_popup(s, nearby_npc);
         }
     }
-    action_key_was_pressed = is_input_active;
+    action_key_was_pressed = input;
 }
 
-function is_dialogue_active() {
-    return dialogue_active;
-}
+function is_dialogue_active() { return dialogue_active; }
 
-// *** FUNZIONE SAFE DESTROY (IMPORTANTE!) ***
 function safe_destroy(obj) {
     if (!obj) return;
-    
-    // Prova 1: Metodo destroy diretto
-    if (typeof obj.destroy === 'function') {
-        obj.destroy();
-        return;
-    }
-    
-    // Prova 2: Oggetto Phaser interno
-    if (obj.ph_obj && typeof obj.ph_obj.destroy === 'function') {
-        obj.ph_obj.destroy();
-        return;
-    }
-    
-    // Prova 3: Se è uno sprite interno
-    if (obj.sprite && typeof obj.sprite.destroy === 'function') {
-        obj.sprite.destroy();
-        return;
-    }
-
-    // Fallback: Nascondi e sposta via
-    if (obj.visibility) obj.visibility.alpha = 0;
-    if (obj.geometry) obj.geometry.y = 10000;
+    if (typeof obj.destroy === 'function') obj.destroy();
+    else if (obj.ph_obj && typeof obj.ph_obj.destroy === 'function') obj.ph_obj.destroy();
 }

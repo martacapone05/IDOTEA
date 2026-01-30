@@ -19,7 +19,8 @@ let img_platform1, img_platform2, img_platform3, img_platform4, img_platform5, i
     img_platform17, img_platform18, img_platform19, img_platform20, img_platform21, img_platform22, img_platform23, img_platform24,
     img_platform25, img_platform26, img_platform27, img_platform28, img_platform29, img_platform30;
 
-let img_piattaforma_suprema1, img_piattaforma_suprema2;
+let img_piattaforma_suprema1;
+
 
 let img_casetta;
 let img_fine_tubo;
@@ -27,7 +28,7 @@ let img_fine_tubo1;
 
 let img_lvl1map_pt1, img_lvl1map_pt2, img_lvl2map1_pt1, img_lvl2map2_pt1, img_lvl2map3_pt1, img_lvl2map_pt2, img_lvl3map;
 
-let img_sfondolvl1, img_primo_piano1;
+let img_sfondolvl1, img_primo_piano1, img_primo_pianolvl2_2;
 
 let img_overlay_tree;
 let img_ladder;
@@ -642,7 +643,8 @@ function create_platforms_lvl2_pt1(s, player) {
 
 
 function create_platforms_lvl2_pt2(s, player) {
-    let blocco_supremo1 = PP.assets.image.add(s, img_blocco_supremo1, -500, 340, 0, 1);
+    let blocchino = PP.assets.image.add(s, img_blocchetto33, -850, 650, 0, 1);
+    let blocco_supremo1 = PP.assets.image.add(s, img_blocco_supremo1, -500, 220, 0, 1);
     let platform1 = PP.assets.image.add(s, img_platform8, 1200, 800, 0, 1);
     let blocco1 = PP.assets.image.add(s, img_blocco7, 1850, 1996, 0, 1);
     let blocchetto1 = PP.assets.image.add(s, img_blocchetto1, 2400, 494, 0, 1);
@@ -676,15 +678,18 @@ function create_platforms_lvl2_pt2(s, player) {
     let platform14 = PP.assets.image.add(s, img_platform19, 1800, -4100, 0, 1);
     let blocchetto13 = PP.assets.image.add(s, img_blocchetto44, 2300, -4270, 0, 1);
     let blocco4 = PP.assets.image.add(s, img_blocco14, 2800, -4140, 0, 1);
+    let bloccone = PP.assets.image.add(s, img_blocchetto33, 4800, -4340, 0, 1);
 
     let ladder1 = PP.assets.image.add(s, img_ladder, 3100, -2600, 0, 1);
 
     let mappa6 = PP.assets.image.add(s, img_lvl2map_pt2, -1000, 2000, 0, 1);
 
-
     PP.layers.set_z_index(mappa6, 10);
     PP.layers.set_z_index(player, 30);
 
+
+    PP.physics.add(s, blocchino, PP.physics.type.STATIC);
+    PP.physics.add_collider_f(s, player, blocchino, collision_platform);
 
     PP.physics.add(s, blocco_supremo1, PP.physics.type.STATIC);
     PP.physics.add_collider_f(s, player, blocco_supremo1, collision_platform);
@@ -787,6 +792,9 @@ function create_platforms_lvl2_pt2(s, player) {
 
     PP.physics.add(s, blocco4, PP.physics.type.STATIC);
     PP.physics.add_collider_f(s, player, blocco4, collision_platform);
+
+    PP.physics.add(s, bloccone, PP.physics.type.STATIC);
+    PP.physics.add_collider_f(s, player, bloccone, collision_platform);
 
 
     PP.physics.add(s, ladder1, PP.physics.type.STATIC);

@@ -8,72 +8,107 @@ let img_info;
 // VARIABILI OGGETTI SFONDO
 let background1;
 let background2;
+let img_primo_pianolvl2_2;
+let img_piattaforma_suprema2;
+let img_sottolvl2_pt2;
+
+// VARIABILE CASCATA
+let img_waterfall5; 
 
 let info;
 let player;
 let floor;
 
 function preload(s) {
-
     preload_hud(s);
 
     // CARICAMENTO SFONDI PARALLASSE
     img_background1 = PP.assets.image.load(s, "assets/images/sfondi/sfondo8.png");
     img_background2 = PP.assets.image.load(s, "assets/images/sfondi/sfondo9.png");
+    img_primo_pianolvl2_2 = PP.assets.image.load(s, "assets/images/primo_pianolvl2_2.png");
+    img_sottolvl2_pt2 = PP.assets.image.load(s, "assets/images/sottolvl2_pt2.png");
 
     img_info = PP.assets.image.load(s, "assets/images/info.png");
     img_player = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_player.png", 185, 294);
+
+    // CARICAMENTO CASCATA (10 frame, 214x218)
+    img_waterfall5 = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/waterfall5sprites.png", 214, 218);
 
     preload_platforms(s);
     preload_player(s);
 }
 
 function create(s) {
-
-    // CREAZIONE SFONDI PARALLASSE (Z-INDEX NEGATIVO)
-    // Sfondo più lontano (sfondo8)
+    // SFONDI PARALLASSE
     background1 = PP.assets.tilesprite.add(s, img_background1, 0, 0, 1280, 800, 0, 0);
     background1.tile_geometry.scroll_factor_x = 0;
     background1.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(background1, -10);
 
-    // Sfondo più vicino (sfondo9)
     background2 = PP.assets.tilesprite.add(s, img_background2, 0, 0, 1280, 800, 0, 0);
     background2.tile_geometry.scroll_factor_x = 0;
     background2.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(background2, -9);
 
+    let primo_pianolvl2_2 = PP.assets.image.add(s, img_primo_pianolvl2_2, -1000, 2000, 0, 1);
+    let sottolvl2_pt2 = PP.assets.image.add(s, img_sottolvl2_pt2, -1000, 2000, 0, 1);
+
+    PP.layers.set_z_index(primo_pianolvl2_2, 40);
+    PP.layers.set_z_index(sottolvl2_pt2, -4);
+
+    // ===============================================
+    // *** GENERAZIONE CASCATE (CORRETTE) ***
+    // ===============================================
+    let waterfall_configs = [
+        { x: 1032, start_y: -824, end_y: 2000 },
+        { x: 1202, start_y: -824, end_y: 2000 },
+        { x: 1372, start_y: -824, end_y: 2000 },
+        { x: 1542, start_y: -824, end_y: 2000 },
+        { x: 2102, start_y: -2061, end_y: -600 },
+        { x: 2272, start_y: -2061, end_y: -600 },
+        { x: 2442, start_y: -2061, end_y: -600 },
+        { x: 2612, start_y: -2061, end_y: -600 }
+    ];
+
+    let step_y = 218 - 15;
+
+    waterfall_configs.forEach((config, group_idx) => {
+        let current_y = config.start_y;
+        let count = 0;
+        while (current_y < config.end_y) {
+            let wf = PP.assets.sprite.add(s, img_waterfall5, config.x, current_y, 0, 1);
+            let anim_name = "wf5_" + group_idx + "_" + count;
+            PP.assets.sprite.animation_add(wf, anim_name, 0, 9, 10, -1);
+            PP.assets.sprite.animation_play(wf, anim_name);
+            PP.layers.set_z_index(wf, -3); 
+            current_y += step_y;
+            count++;
+        }
+    });
 
     // SPAWN
     let start_x = 0;
     let start_y = 550;
 
-    // Se arrivi dalla fine (es. livello successivo), cambi coordinate
     if (PP.game_state.get_variable("punto_di_partenza") == "fine") {
-        start_x = 0; 
-        start_y = 550;
+        start_x = 4300; 
+        start_y = -4500;
         PP.game_state.set_variable("punto_di_partenza", "inizio");
     } else {
-        // Reset Stats se inizio livello
         PP.game_state.set_variable("player_hp", 4);
         PP.game_state.set_variable("player_fragments", 0);
     }
 
     player = PP.assets.sprite.add(s, img_player, start_x, start_y, 0.5, 1);
     PP.physics.add(s, player, PP.physics.type.DYNAMIC); 
-
-    // *** MODIFICA COLLISIONE PLAYER ***
     PP.physics.set_collision_rectangle(player, 138, 230, 20, 64);
 
-    // Pavimento base
     floor = PP.shapes.rectangle_add(s, 0, 620, 2000, 10, "0x000000", 0);
     PP.physics.add(s, floor, PP.physics.type.STATIC);
     PP.physics.add_collider(s, player, floor);
 
     configure_player_animations(s, player); 
     
-    // Attenzione: Assicurati che questa funzione esista in platforms.js, 
-    // altrimenti commentala per avere il livello vuoto.
     if(typeof create_platforms_lvl2_pt2 === "function") {
         create_platforms_lvl2_pt2(s, player);
     }
@@ -82,17 +117,14 @@ function create(s) {
     create_collectible_fragment(s, 1200, 470, player);
     create_collectible_heart(s, 1700, 470, player);
 
-    // CAMERA SETUP
     PP.camera.start_follow(s, player, 0, -40);
 
-    // if(s.cameras && s.cameras.main) {
-//         s.cameras.main.setBounds(-1000, -6720, 4800, 2000);
-   // }
+    if(s.cameras && s.cameras.main) {
+        s.cameras.main.setBounds(-350, -6720, 5000, 8720);
+    }
 
     player.cam_offset_x = 0; 
     player.cam_target_x = 0;
-    
-    // Deadzone Standard
     PP.camera.set_deadzone(s, 10, 50);
 
     player.can_climb = false; 
@@ -105,8 +137,21 @@ function create(s) {
 }
 
 function update(s) {
-    
     manage_player_update(s, player);    
+
+    // --- LOGICA PASSAGGI DI LIVELLO ---
+    
+    // 1. VERSO LVL 3 (NUOVE COORDINATE)
+    if (player.geometry.x >= 4500 && player.geometry.y <= -4300) {
+        PP.game_state.set_variable("punto_di_partenza", "inizio");
+        PP.scenes.start("lvl3");
+    }
+
+    // 2. VERSO LVL 1 PT 2 (INDIETRO)
+    if (player.geometry.x <= -240) {
+        PP.game_state.set_variable("punto_di_partenza", "fine");
+        PP.scenes.start("lvl2_pt1");
+    }
 
     // CAMERA INTERPOLATION X
     let vel_x = PP.physics.get_velocity_x(player);
@@ -115,29 +160,20 @@ function update(s) {
     else player.cam_target_x = 0;
     
     player.cam_offset_x += (player.cam_target_x - player.cam_offset_x) * 0.03;
+    PP.camera.set_follow_offset(s, player.cam_offset_x, 100);
 
-    // CAMERA INTERPOLATION Y
-    PP.camera.set_follow_offset(s, player.cam_offset_x, 120);
-
-    // GESTIONE PARALLASSE
     let scroll_x = PP.camera.get_scroll_x(s);
-    background2.tile_geometry.x = scroll_x * 0.1; // Più veloce (vicino)
+    background2.tile_geometry.x = scroll_x * 0.1; 
 
-    // Caduta nel vuoto -> Game Over
+    // Caduta nel vuoto
     if (player.geometry.y > 1600) {
-        console.log("Caduto nel vuoto! Game Over...");
         PP.game_state.set_variable("last_scene", "lvl2_pt2");
-
-        
         player.geometry.x = 0;
         player.geometry.y = 550;
-        
         player.hp = 4;
         PP.game_state.set_variable("player_hp", 4); 
-        
         PP.physics.set_velocity_x(player, 0);
         PP.physics.set_velocity_y(player, 0);
-
         if (typeof update_cuore_graphic === "function") update_cuore_graphic(player);
         respawn_hearts(s, player);
     }

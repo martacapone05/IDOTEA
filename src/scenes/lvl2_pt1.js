@@ -133,11 +133,11 @@ function create(s) {
     // ======================================================
     
     let start_x = -373; 
-    let start_y = 500;
+    let start_y = 550;
 
 
     if (PP.game_state.get_variable("punto_di_partenza") == "fine") {
-        start_x = 0; 
+        start_x = 15900; 
         start_y = 550;
         PP.game_state.set_variable("punto_di_partenza", "inizio");
     }
@@ -233,20 +233,23 @@ function create(s) {
     create_collectible_fragment(s, 1200, 470, player);
     create_collectible_heart(s, 1700, 470, player);
 
-    funivia_ritorno_zone = PP.shapes.rectangle_add(s, -373, 464, 220, 253, "0x00FF00", 0.5);
+    // TRIGGER PER TORNARE AL LIVELLO 1
+    funivia_ritorno_zone = PP.shapes.rectangle_add(s, -373, 464, 220, 253, "0x00FF00", 0);
     PP.physics.add(s, funivia_ritorno_zone, PP.physics.type.STATIC);
+    
     PP.physics.add_overlap_f(s, player, funivia_ritorno_zone, function(scene, p, zone) {
         if (PP.interactive.kb.is_key_down(scene, PP.key_codes.E)) {
-            console.log("Ritorno con la funivia -> lvl1_pt2");
+            console.log("Ritorno al lvl1_pt2 -> Punto Finale");
+            // IMPOSTA LA VARIABILE DI RITORNO
             PP.game_state.set_variable("punto_di_partenza", "funivia_ritorno");
             PP.scenes.start("lvl1_pt2");
         }
     });
 
     PP.camera.start_follow(s, player, 0, 200);
-    if(s.cameras && s.cameras.main) {
-        s.cameras.main.setBounds(-1300, -2550, 17621, 6000); 
-    }
+    
+    // IMPOSTAZIONE LIMITI DELLA CAMERA (set_bounds di PoliPhaser)
+    PP.camera.set_bounds(s, -1300, -2550, 17621, 6000); 
     
     // BARRIERE
     let barrier_left = PP.shapes.rectangle_add(s, -1350, -800, 100, 5000, "0x000000", 0);
@@ -273,14 +276,12 @@ function create(s) {
 
 function update(s) {
     
-    // RESET FLAG custom
     // GESTIONE DIALOGHI (TASTO E)
     manage_npc_interaction(s, player);
 
     // GESTIONE TASTO R (ROTTURA MURO)
     if (PP.interactive.kb.is_key_down(s, PP.key_codes.R)) {
         
-        // Controllo se il flag è attivo (settato dall'overlap)
         if (!is_player_attacking && player.near_breakable_wall && player.current_wall && !player.current_wall.is_broken) {
             
             is_player_attacking = true;
@@ -296,6 +297,8 @@ function update(s) {
                 if(player.current_wall) {
                     player.current_wall.is_broken = true;
                     PP.assets.sprite.animation_play(player.current_wall, "break");
+                    let muri = PP.game_state.get_variable("muri_rotti") || 0;
+                    PP.game_state.set_variable("muri_rotti", muri + 1);
                 }
                 
                 // Timer fine
@@ -325,7 +328,11 @@ function update(s) {
     else player.cam_target_x = 0;                    
 
     player.cam_offset_x += (player.cam_target_x - player.cam_offset_x) * 0.03;
-    PP.camera.set_follow_offset(s, player.cam_offset_x, -40);
+
+    if (player.geometry.x > 7500) {
+        player.cam_target_y = -20
+    } else (player.cam_target_y = 100)
+
     
     let scroll_x = PP.camera.get_scroll_x(s);
     background1.tile_geometry.x = scroll_x * 0.1;
@@ -334,22 +341,13 @@ function update(s) {
 
     // GAME OVER
     if (player.geometry.y > 4000) {
-        console.log("Caduto nel vuoto! Game Over...");
         PP.game_state.set_variable("last_scene", "lvl2_pt1");
         PP.scenes.start("game_over");
-
-        player.geometry.x = 0;
-        player.geometry.y = 520;
-        player.hp = 4;
-        PP.game_state.set_variable("player_hp", 4);
-        PP.physics.set_velocity_x(player, 0);
-        PP.physics.set_velocity_y(player, 0);
-        if (typeof update_cuore_graphic === "function") update_cuore_graphic(player);
-        respawn_hearts(s, player);
     }
 
+    // PASSAGGIO AL LIVELLO SUCCESSIVO
     if (player.geometry.x > 15930) {
-    PP.scenes.start("lvl2_pt2");
+        PP.scenes.start("lvl2_pt2");
     }
 
 }
@@ -403,10 +401,7 @@ function open_dialogue_popup(s, npc) {
         npc.dialogues = [{ speaker: "npc", text: frase_random }];
     }
 
-    let screen_center_x = 0; 
-    let popup_y = 0; 
-    
-    dialogue_popup = PP.assets.image.add(s, img_dialogue_bg_2, screen_center_x, popup_y, 0, 0);
+    dialogue_popup = PP.assets.image.add(s, img_dialogue_bg_2, 0, 0, 0, 0);
     dialogue_popup.visibility.alpha = 0.95;
     dialogue_popup.tile_geometry.scroll_factor_x = 0;
     dialogue_popup.tile_geometry.scroll_factor_y = 0;
@@ -447,11 +442,19 @@ function close_dialogue_popup() {
     current_npc = null;
     current_dialogue_index = 0;
     
-    safe_destroy(dialogue_popup);
-    dialogue_popup = null;
+    if (dialogue_popup) {
+        PP.assets.destroy(dialogue_popup); 
+        dialogue_popup = null;
+    }
     
-    if (dialogue_text) { PP.shapes.destroy(dialogue_text); dialogue_text = null; }
-    if (dialogue_speaker) { PP.shapes.destroy(dialogue_speaker); dialogue_speaker = null; }
+    if (dialogue_text) { 
+        PP.shapes.destroy(dialogue_text); 
+        dialogue_text = null; 
+    }
+    if (dialogue_speaker) { 
+        PP.shapes.destroy(dialogue_speaker); 
+        dialogue_speaker = null; 
+    }
 }
 
 function advance_dialogue() {
@@ -462,14 +465,9 @@ function advance_dialogue() {
 
 function manage_npc_interaction(s, player) {
     let e_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.E);
-    let down_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.SPACE); 
+    let space_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.SPACE); 
     
-    let is_input_active = false;
-    if (dialogue_active) {
-        is_input_active = e_pressed || down_pressed;
-    } else {
-        is_input_active = e_pressed;
-    }
+    let is_input_active = dialogue_active ? (e_pressed || space_pressed) : e_pressed;
     
     if (is_input_active && !action_key_was_pressed) {
         if (dialogue_active) {
@@ -499,7 +497,6 @@ function safe_destroy(obj) {
 
 function create_waterfalls(s) {
     
-    // Funzione helper per colonne Waterfall 1 e 2
     let create_column = function(image, anim, x, start_y, limit_y, h) {
         let current_y = start_y;
         while(current_y < limit_y) {
@@ -511,7 +508,6 @@ function create_waterfalls(s) {
         }
     };
 
-    // Cascate standard (1 e 2)
     create_column(img_waterfall1, "flow1", 1376, 622, 1030, 211);
     create_column(img_waterfall1, "flow1", 4378, -1023, 1030, 211);
     create_column(img_waterfall2, "flow2", 2492, 255, 1030, 210);
@@ -522,19 +518,12 @@ function create_waterfalls(s) {
     create_column(img_waterfall2, "flow2", 5889, -444, 1030, 210);
     create_column(img_waterfall2, "flow2", 5796, -1005, 1030, 210);
 
-    // ------------------------------------------------------
-    // *** GESTIONE WATERFALL 5 (3 CASCATE SINGOLE) ***
-    // ------------------------------------------------------
-    
-    // Funzione helper per aggiungere una singola cascata con la sua schiuma
     let add_single_wf5 = function(x, y) {
-        // Aggiunge la Cascata
         let wf = PP.assets.sprite.add(s, img_waterfall5, x, y, 0, 1);
         PP.assets.sprite.animation_add(wf, "flow5", 0, 9, 10, -1);
         PP.assets.sprite.animation_play(wf, "flow5");
         PP.layers.set_z_index(wf, 7);
 
-        // Aggiunge la schiuma alla base dello sprite cascata
         let schiuma = PP.assets.sprite.add(s, img_schiuma5, x - 19, y + 7, 0, 1);
         PP.assets.sprite.animation_add(schiuma, "foam5", 0, 9, 10, -1);
         PP.assets.sprite.animation_play(schiuma, "foam5");
