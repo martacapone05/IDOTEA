@@ -45,21 +45,21 @@ let fly_pos_1_start = { x: 1700, y: -6163 };
 let fly_pos_1_end = { x: 1490, y: -6550 };
 
 let fly_pos_2_start = { x: 1490, y: -6550 }; 
-let fly_pos_2_end = { x: 3112, y: -6510 };   
+let fly_pos_2_end = { x: 2980, y: -6550 };   
 
-let fly_pos_3_start = { x: 3112, y: -6510 }; 
-let fly_pos_3_end = { x: 1116, y: -6507 }; 
+let fly_pos_3_start = { x: 2980, y: -6550 }; 
+let fly_pos_3_end = { x: 1000, y: -6550 }; 
 
-let fly_pos_4_start = { x: 1116, y: -6507 };
-let fly_pos_4_end = { x: 2824, y: -6511 };
+let fly_pos_4_start = { x: 1000, y: -6550 };
+let fly_pos_4_end = { x: 2500, y: -6550 };
 
 // Swoop finale
-let fly_pos_escape_start = { x: 2824, y: -6511 };
+let fly_pos_escape_start = { x: 2500, y: -6550 };
 let fly_pos_escape_end = { x: 2555, y: -7476 };
 
 let current_fly_start = { x: 0, y: 0 };
 let current_fly_end = { x: 0, y: 0 };
-let current_fly_height = 300; 
+let current_fly_height = 100; 
 
 // 0 = Inizio, 1..5 = Fasi successive
 let avvoltoio_stage = 0; 
