@@ -140,7 +140,7 @@ function create(s) {
     background3.tile_geometry.scroll_factor_x = 0;
     background3.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(background3, -8);
-    background3.visibility.alpha = 0.4; 
+    background3.visibility.alpha = 0.6;
 
 
     // CREAZIONE CASCATE E FUMO
@@ -391,7 +391,6 @@ if (player.geometry.x > 12686) {
     let scroll_x = PP.camera.get_scroll_x(s);
     background1.tile_geometry.x = scroll_x * 0.1;
     background2.tile_geometry.x = scroll_x * 0.2;
-    background3.tile_geometry.x = scroll_x * 0.5;
 
     if (player.geometry.y > 4000) {
         PP.game_state.set_variable("last_scene", "lvl2_pt1");

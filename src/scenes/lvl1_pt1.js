@@ -5,6 +5,7 @@ let img_light;
 let img_topo; 
 let img_dialogue_bg; 
 let img_condizionatore2;
+let img_smoke3;
 
 let img_button_e;
 let img_button_r;
@@ -72,6 +73,8 @@ function preload(s) {
     img_muro_rompibile = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_muro.png", 364, 354);
     img_light = PP.assets.sprite.load_spritesheet(s, "assets/images/light1sprites.png", 707, 873);
     
+    img_smoke3 = PP.assets.sprite.load_spritesheet(s, "assets/images/smoke3sprites.png", 500, 625);
+
     // Condizionatore 2
     img_condizionatore2 = PP.assets.sprite.load_spritesheet(s, "assets/images/condizionatore2.png", 172, 134);
 
@@ -136,6 +139,24 @@ function create(s) {
     PP.assets.sprite.animation_play(cond2, "spin");
     PP.layers.set_z_index(cond2, 15); // Z-index intermedio per visibilità corretta
 
+    // PRIMO FUMO
+    let smoke1 = PP.assets.sprite.add(s, img_smoke3, 572, 672, 0, 1);
+    PP.layers.set_z_index(smoke1, 9);
+    PP.assets.sprite.animation_add(smoke1, "puff", 0, 11, 10, -1);
+    PP.assets.sprite.animation_play(smoke1, "puff");
+
+    // SECONDO FUMO
+    let smoke2 = PP.assets.sprite.add(s, img_smoke3, 1254, 672, 0, 1);
+    PP.layers.set_z_index(smoke2, 9);
+    PP.assets.sprite.animation_add(smoke2, "puff", 0, 11, 10, -1);
+    PP.assets.sprite.animation_play(smoke2, "puff");
+
+    // TERZO FUMO
+    let smoke3 = PP.assets.sprite.add(s, img_smoke3, 6083, 815, 0, 1);
+    PP.layers.set_z_index(smoke3, 9);
+    PP.assets.sprite.animation_add(smoke3, "puff", 0, 11, 10, -1);
+    PP.assets.sprite.animation_play(smoke3, "puff");
+
     // PLAYER
     player = PP.assets.sprite.add(s, img_player, start_x, start_y, 0.5, 1);
     PP.physics.add(s, player, PP.physics.type.DYNAMIC); 
@@ -159,6 +180,7 @@ function create(s) {
     let topo = PP.assets.sprite.add(s, img_topo, 8259, 27, 0, 1);
     
     PP.layers.set_z_index(topo, 29); 
+
     PP.assets.sprite.animation_add(topo, "idle_topo", 0, 4, 8, -1);
     PP.assets.sprite.animation_play(topo, "idle_topo");
     PP.physics.add(s, topo, PP.physics.type.STATIC);

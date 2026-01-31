@@ -91,7 +91,7 @@ function update_button_highlight() {
 
 function activate_menu_option(index) {
     if (index === 0) {
-        PP.scenes.start("lvl1_pt1");
+        PP.scenes.start("schermata_idotea");
     } else if (index === 1) {
         PP.scenes.start("tavole");
     } else if (index === 2) {

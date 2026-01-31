@@ -198,18 +198,19 @@ function create(s) {
     let overlay_wf1 = PP.assets.image.add(s, img_overlay_cascata2, 4481, 328, 0, 1);
     PP.layers.set_z_index(overlay_wf1, 26); 
 
-    let wf3_single = PP.assets.sprite.add(s, img_waterfall3, 2284, -6326, 0, 1);
+    let wf3_single = PP.assets.sprite.add(s, img_waterfall3, 2284, -6529, 0, 1);
     PP.assets.sprite.animation_add(wf3_single, "flow3", 0, 9, 10, -1);
     PP.assets.sprite.animation_play(wf3_single, "flow3");
     PP.layers.set_z_index(wf3_single, 10); 
 
-    let overlay_wf3 = PP.assets.image.add(s, img_overlay_cascata, 2284, -6326, 0, 1);
+    let overlay_wf3 = PP.assets.image.add(s, img_overlay_cascata, 2226, -6271, 0, 1);
     PP.layers.set_z_index(overlay_wf3, 11);
 
 
     // SPAWN INIZIALE LVL3
     let start_x = -1400;
     let start_y = 590;
+
 
     if (PP.game_state.get_variable("punto_di_partenza") == "fine") {
         start_x = -1400; 
@@ -324,8 +325,8 @@ function create(s) {
 
     avvoltoio = PP.assets.sprite.add(s, img_avvoltoio, fly_pos_1_start.x, fly_pos_1_start.y, 0, 1);
     avvoltoio.custom_interaction_area = { min_x: 1600, max_x: 2500, min_y: -6400, max_y: -6000 };
-    PP.assets.sprite.animation_add(avvoltoio, "idle", 0, 4, 6, -1); 
-    PP.assets.sprite.animation_add(avvoltoio, "fly", 5, 19, 10, -1); 
+    PP.assets.sprite.animation_add(avvoltoio, "idle", 0, 3, 6, -1);
+    PP.assets.sprite.animation_add(avvoltoio, "fly", 5, 19, 10, -1);
     PP.assets.sprite.animation_play(avvoltoio, "idle");
     PP.physics.add(s, avvoltoio, PP.physics.type.STATIC);
     PP.layers.set_z_index(avvoltoio, 20);
@@ -373,9 +374,12 @@ function update(s) {
 
         // LAMPEGGIO (FLASHING)
         let current_time = PP.timers.get_time(s);
-        if (current_time > avvoltoio_flash_timer) {
+        if (current_time > avvoltoio_flash_timer && avvoltoio_stage >= 2) {
             avvoltoio.visibility.alpha = (avvoltoio.visibility.alpha === 1) ? 0.5 : 1;
             avvoltoio_flash_timer = current_time + 100;
+        } else if (avvoltoio_stage < 2) {
+            // Se siamo al primo volo (stage 1), assicuriamoci che l'alpha sia 1
+            avvoltoio.visibility.alpha = 1;
         }
 
         if (t >= 1) {

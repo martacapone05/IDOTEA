@@ -277,10 +277,7 @@ function create_platforms_lvl1_pt1(s, player) {
     // Livello 10: Mappa (Sopra ai blocchi)
     PP.layers.set_z_index(sfondolvl1, 2);
     PP.layers.set_z_index(primo_piano1, 11);
-
     PP.layers.set_z_index(casetta, 110);
-
-
 
 
     // FISICA
@@ -988,9 +985,7 @@ function create_platforms_lvl3(s, player) {
     PP.physics.add(s, ladder1, PP.physics.type.STATIC);
     PP.physics.add_overlap_f(s, player, ladder1, on_ladder_overlap);
 
-
 }
-
 
 
 
