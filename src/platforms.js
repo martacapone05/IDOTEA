@@ -851,12 +851,14 @@ function create_platforms_lvl3(s, player) {
     let piattaforma_suprema2 = PP.assets.image.add(s, img_piattaforma_suprema2, 700, -5980, 0, 1)
 
     let ladder1 = PP.assets.image.add(s, img_ladder, 3700, 210, 0, 1);
+    let ladder_vera = PP.assets.image.add(s, img_ladder_vera, 3700, 210, 0, 1);
 
     let mappa7 = PP.assets.image.add(s, img_lvl3map, -1970, 1380, 0, 1);
 
     PP.layers.set_z_index(mappa7, 10);
     PP.layers.set_z_index(player, 30);
     PP.layers.set_z_index(colonne, 40);
+    PP.layers.set_z_index(ladder_vera, 25);
 
 
     PP.physics.add(s, platform1, PP.physics.type.STATIC);

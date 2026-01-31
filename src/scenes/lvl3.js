@@ -161,14 +161,14 @@ function create(s) {
         }
     };
 
-    create_wf1_column(2860, 881, 1880);
+    create_wf1_column(2860, 670, 1880);
 
     let wf1_single = PP.assets.sprite.add(s, img_waterfall1, 4544, 264, 0, 1);
     PP.assets.sprite.animation_add(wf1_single, "flow1", 0, 9, 10, -1);
     PP.assets.sprite.animation_play(wf1_single, "flow1");
     PP.layers.set_z_index(wf1_single, 25); 
 
-    let overlay_wf1 = PP.assets.image.add(s, img_overlay_cascata, 4481, 333, 0, 1);
+    let overlay_wf1 = PP.assets.image.add(s, img_overlay_cascata2, 4481, 328, 0, 1);
     PP.layers.set_z_index(overlay_wf1, 26); 
 
     let wf3_single = PP.assets.sprite.add(s, img_waterfall3, 2284, -6326, 0, 1);
