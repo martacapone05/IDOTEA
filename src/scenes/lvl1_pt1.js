@@ -6,12 +6,14 @@ let img_topo;
 let img_dialogue_bg; 
 let img_condizionatore2;
 let img_smoke3;
+let img_under_layer;
 
 let img_button_e;
 let img_button_r;
-let img_vignetta_topo; 
+let img_vignetta_topo;
 
-let overlay; 
+let under_layer;
+let overlay;
 let info;
 let spruzzo_anim;
 let img_muro_rompibile;
@@ -64,6 +66,7 @@ function preload(s) {
 
     img_info = PP.assets.image.load(s, "assets/images/info.png");
     img_overlay = PP.assets.image.load(s, "assets/images/overlaysewer.png"); 
+    img_under_layer = PP.assets.image.load(s, "assets/images/under_layer.png"); 
     
     // PLAYER
     img_player = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_player.png", 185, 294);
@@ -165,6 +168,9 @@ function create(s) {
     floor = PP.shapes.rectangle_add(s, 640, 620, 4000, 10, "0x000000", 0);
     PP.physics.add(s, floor, PP.physics.type.STATIC);
     PP.physics.add_collider(s, player, floor);
+
+    let under_layer = PP.assets.image.add(s, img_under_layer, 4439, 740, 0, 1);
+    PP.layers.set_z_index(under_layer, 10);
 
     configure_player_animations(s, player); 
     
