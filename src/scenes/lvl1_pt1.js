@@ -23,6 +23,9 @@ let dialogue_text = null;
 let dialogue_speaker = null;
 let action_key_was_pressed = false; 
 
+// Variabile per gestione rottura muro
+let is_player_attacking = false;
+
 // Configurazione NPC
 const NPC_INTERACTION_RANGE = 200; 
 
@@ -56,6 +59,7 @@ function create(s) {
     PP.game_state.set_variable("last_scene", "lvl1_pt1");
 
     reset_npcs(); 
+    is_player_attacking = false;
 
     let start_x = 80;
     let start_y = 500;
@@ -205,6 +209,33 @@ function update(s) {
     // 1. GESTIONE INPUT DIALOGHI
     manage_npc_interaction(s, player);
 
+    // 1.5 GESTIONE TASTO R (ROTTURA MURO)
+    if (PP.interactive.kb.is_key_down(s, PP.key_codes.R)) {
+        if (!is_player_attacking && player.near_breakable_wall && player.current_wall && !player.current_wall.is_broken) {
+            is_player_attacking = true;
+            player.is_acting = true;
+            PP.physics.set_velocity_x(player, 0);
+            PP.assets.sprite.animation_play(player, "piccone");
+            
+            PP.timers.add_timer(s, 500, function() {
+                if(player.current_wall) {
+                    player.current_wall.is_broken = true;
+                    PP.assets.sprite.animation_play(player.current_wall, "break");
+                    let muri = PP.game_state.get_variable("muri_rotti") || 0;
+                    PP.game_state.set_variable("muri_rotti", muri + 1);
+                }
+                
+                PP.timers.add_timer(s, 1500, function() {
+                    if(player.current_wall) {
+                        PP.assets.destroy(player.current_wall);
+                    }
+                    is_player_attacking = false;
+                    player.is_acting = false;
+                }, false);
+            }, false);
+        }
+    }
+
     // 2. GESTIONE MOVIMENTO E IDLE
     if (is_dialogue_active()) {
         // --- SE PARLA: BLOCCA TUTTO ---
@@ -215,9 +246,8 @@ function update(s) {
         // Nota: Assicurati che "idle" sia il nome corretto della tua animazione da fermo
         PP.assets.sprite.animation_play(player, "idle");
         
-    } else {
-        // --- SE NON PARLA: MUOVITI ---
-        // Eseguiamo il normale update del player solo se il dialogo è CHIUSO
+    } else if (!is_player_attacking) {
+        // --- SE NON PARLA E NON ATTACCA: MUOVITI ---
         manage_player_update(s, player);
     }
 
