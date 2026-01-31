@@ -1,4 +1,8 @@
-let img_background;
+// VARIABILI IMMAGINI SFONDO
+// let img_background; // RIMOSSO
+let img_background13;
+let img_background14;
+
 let img_player;
 let img_info;
 let img_colonna_base;
@@ -13,7 +17,11 @@ let img_waterfall1;
 let img_overlay_cascata;
 let img_overlay_cascata2;
 
-let background;
+// OGGETTI SFONDO
+// let background; // RIMOSSO
+let background13;
+let background14;
+
 let info;
 let player;
 let floor;
@@ -77,7 +85,11 @@ let dialogo_avvoltoio = [
 
 function preload(s) {
     preload_hud(s);
-    img_background = PP.assets.image.load(s, "assets/images/sfondi/sfondo.png");
+    
+    // CARICAMENTO NUOVI SFONDI
+    img_background13 = PP.assets.image.load(s, "assets/images/sfondi/sfondo13.png");
+    img_background14 = PP.assets.image.load(s, "assets/images/sfondi/sfondo14.png");
+
     img_info = PP.assets.image.load(s, "assets/images/info.png");
     img_player = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_player.png", 185, 294);
     img_colonna_base = PP.assets.sprite.load_spritesheet(s, "assets/images/colonna_base_sprite.png", 400, 450);
@@ -112,11 +124,20 @@ function create(s) {
     // Reset sequenza colonne
     next_column_to_break = 2;
 
-    // SFONDO
-    background = PP.assets.tilesprite.add(s, img_background, 0, 0, 1280, 800, 0, 0);
-    background.tile_geometry.scroll_factor_x = 0;
-    background.tile_geometry.scroll_factor_y = 0;
-    PP.layers.set_z_index(background, -100);
+    // --- SFONDI ---
+    
+    // 1. SFONDO 13 (STATICO - DIETRO TUTTO)
+    background13 = PP.assets.tilesprite.add(s, img_background13, 0, 0, 1280, 800, 0, 0);
+    background13.tile_geometry.scroll_factor_x = 0;
+    background13.tile_geometry.scroll_factor_y = 0;
+    PP.layers.set_z_index(background13, -102); 
+
+    // 2. SFONDO 14 (PARALLASSE - UN PO' PIU' AVANTI)
+    background14 = PP.assets.tilesprite.add(s, img_background14, 0, 0, 1280, 800, 0, 0);
+    background14.tile_geometry.scroll_factor_x = 0;
+    background14.tile_geometry.scroll_factor_y = 0;
+    PP.layers.set_z_index(background14, -101); 
+
 
     // ===============================================
     // *** CASCATE ***
@@ -176,8 +197,8 @@ function create(s) {
     PP.assets.sprite.animation_play(wf3_single, "flow3");
     PP.layers.set_z_index(wf3_single, 10); 
 
-    let overlay_wf3 = PP.assets.image.add(s, img_overlay_cascata, 2226, -6271, 0, 0);
-    PP.layers.set_z_index(overlay_wf3, 11); 
+    let overlay_wf3 = PP.assets.image.add(s, img_overlay_cascata, 2284, -6326, 0, 1);
+    PP.layers.set_z_index(overlay_wf3, 11);
 
 
     // SPAWN INIZIALE LVL3
@@ -402,6 +423,14 @@ function update(s) {
 
     PP.camera.set_follow_offset(s, player.cam_offset_x, player.cam_offset_y);
 
+    // --- AGGIORNAMENTO PARALLASSE ---
+    let scroll_x = PP.camera.get_scroll_x(s);
+    
+    // Background13 STATICO
+    // (Non lo tocchiamo nell'update perché è tilesprite con scroll_factor = 0)
+    
+    background14.tile_geometry.x = (scroll_x * 0.05+100); 
+
     if (player.geometry.y > 2000) {
         PP.game_state.set_variable("last_scene", "lvl3");
         PP.scenes.start("game_over");
@@ -446,7 +475,7 @@ function open_dialogue_popup(s, npc) {
     dialogue_popup.tile_geometry.scroll_factor_x = 0;
     dialogue_popup.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_popup, 10001);
-    dialogue_speaker = PP.shapes.text_styled_add(s, 260, 32, "", 22, "Luminari", "bold", "0x01AA03", null, 0, 0);
+    dialogue_speaker = PP.shapes.text_styled_add(s, 260, 32, "", 22, "Luminari", "bold", "0xa430b3", null, 0, 0);
     dialogue_speaker.tile_geometry.scroll_factor_x = 0;
     dialogue_speaker.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_speaker, 10005);

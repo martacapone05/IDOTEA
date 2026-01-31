@@ -25,6 +25,10 @@ let img_ladder_vera;
 // SFONDO DIALOGO
 let img_dialogue_bg; 
 
+// IMMAGINI COMANDI
+let img_comando_e;
+let img_comando_r; // NUOVO
+
 let background1;
 let background2;
 let background3;
@@ -37,6 +41,11 @@ let floor;
 // Variabile per la zona funivia
 let funivia_zone; 
 let wf_damage_zone; 
+
+// BOTTONI
+let btn_e_gatto;
+let btn_e_ladder; 
+let btn_r_muro; // NUOVO BOTTONE R
 
 // VARIABILI SISTEMA DIALOGHI
 let npc_list = [];
@@ -54,6 +63,10 @@ let has_spoken_to_cat = false;
 let waterfall_sequence_triggered = false;
 let cat_npc_ref = null; 
 
+// NUOVE VARIABILI STATO GATTO
+let is_cat_quest_completed = false; // Diventa true dopo aver rotto il muro
+let has_finished_story_dialogue = false; // Diventa true dopo aver letto tutto il dialogo Fase 2
+
 // DEFINIZIONE DIALOGHI
 let dialoghi_gatto_fase1 = [
     { speaker: "npc", text: "Oh, buonasera, giovane minatore! Forse tu puoi aiutarmi, nè?\nQuesto scarico d'acqua sta riversando proprio davanti alla mia\nbancarella, e io non so proprio come fare." },
@@ -67,6 +80,12 @@ let dialoghi_gatto_fase2 = [
     { speaker: "npc", text: "Ma è l'unico modo che ho per cucinare il mio ramen, anche se…\nun tempo, ho l'impressione che il sapore fosse migliore, sì…" },
     { speaker: "player", text: "È colpa di un incantesimo che ha avvelenato la Fonte.\nIl mondo non deve essere così, e io posso spezzare tutto questo\nse raggiungo la Fonte Eterna." },
     { speaker: "npc", text: "Ara… dunque sono le nostre menti a essere state modellate…\nHayaku, wakamono! Ike, ike!" }
+];
+
+// NUOVE FRASI FASE 3 (CASUALI)
+let frasi_gatto_fase3 = [
+    "Mi toccherà trovare altra acqua per il mio ramen…",
+    "Forse è per questo che i clienti non tornano…"
 ];
 
 
@@ -106,6 +125,10 @@ function preload(s) {
 
     // CARICAMENTO SFONDO DIALOGO
     img_dialogue_bg = PP.assets.image.load(s, "assets/images/dialoghi/dialogo2.png");
+    
+    // CARICAMENTO COMANDI
+    img_comando_e = PP.assets.image.load(s, "assets/images/comando_e.png");
+    img_comando_r = PP.assets.image.load(s, "assets/images/comando_r.png");
 
     preload_platforms(s);
     preload_player(s);
@@ -120,6 +143,8 @@ function create(s) {
     reset_npcs(); 
     has_spoken_to_cat = false;
     waterfall_sequence_triggered = false;
+    is_cat_quest_completed = false;     // Reset
+    has_finished_story_dialogue = false; // Reset
 
     // PARALLAX
     background1 = PP.assets.tilesprite.add(s, img_background1, 0, 0, 1280, 800, 0, 0);
@@ -273,6 +298,26 @@ function create(s) {
     register_npc(cat, "Gatto", dialoghi_gatto_fase1);
     cat_npc_ref = cat; 
 
+    // CREAZIONE BOTTONE E (vicino al gatto)
+    btn_e_gatto = PP.assets.image.add(s, img_comando_e, 4209, -2183, 0, 0); // Un po' sopra il gatto
+    btn_e_gatto.visibility.alpha = 0;
+    PP.layers.set_z_index(btn_e_gatto, 9999);
+
+    // ===============================================
+    // *** NUOVO BOTTONE E (SCALA) ***
+    // ===============================================
+    btn_e_ladder = PP.assets.image.add(s, img_comando_e, -588, 583, 0, 0); 
+    btn_e_ladder.visibility.alpha = 0;
+    PP.layers.set_z_index(btn_e_ladder, 9999);
+
+    // ===============================================
+    // *** NUOVO BOTTONE R (MURO) ***
+    // ===============================================
+    btn_r_muro = PP.assets.image.add(s, img_comando_r, 4646, -2133, 0, 0);
+    btn_r_muro.visibility.alpha = 0;
+    PP.layers.set_z_index(btn_r_muro, 9999);
+
+
     let sgabelli = PP.assets.image.add(s, img_sgabelli, 4203, -2045, 0, 1);
     PP.layers.set_z_index(sgabelli, 21);
 
@@ -406,8 +451,8 @@ function create(s) {
     create_hud(s, player);
 
     // COLLEZIONABILI
-    create_collectible_fragment(s, 5750, -120, player);
-    create_collectible_heart(s, 5450, -2100, player);
+    create_collectible_fragment(s, 6053, -4021, player);
+    create_collectible_heart(s, -140, -3314, player);
 
    // ZONA FUNIVIA
     funivia_zone = PP.shapes.rectangle_add(s, 7099, -4180, 220, 253, "0x00FF00", 0.5);
@@ -471,6 +516,9 @@ function update(s) {
             PP.game_state.set_variable("muri_rotti", muri + 1);
 
             // A. CAMBIA DIALOGO GATTO -> FASE 2
+            // Impostiamo anche che la quest è "tecnicamente" completata per attivare la fase 3 dopo
+            is_cat_quest_completed = true; 
+            
             if (cat_npc_ref) {
                 cat_npc_ref.dialogues = dialoghi_gatto_fase2;
             }
@@ -593,6 +641,52 @@ function update(s) {
         if (typeof update_cuore_graphic === "function") update_cuore_graphic(player);
         respawn_hearts(s, player);
     }
+
+    // =======================================================
+    // *** GESTIONE VISIBILITÀ BOTTONI (PROMPT) ***
+    // =======================================================
+    
+    // 1. BOTTONE E (GATTO)
+    if (btn_e_gatto) {
+        let dist_gatto = Math.abs(player.geometry.x - 4209);
+        if (dist_gatto < 200 && !dialogue_active) {
+            btn_e_gatto.visibility.alpha = 1;
+        } else {
+            btn_e_gatto.visibility.alpha = 0;
+        }
+    }
+
+    // 2. BOTTONE E (SCALA)
+    if (btn_e_ladder) {
+        // Distanza dal punto -588 (dove sta la scala/bottone)
+        let dist_ladder_x = Math.abs(player.geometry.x - (-588));
+        let dist_ladder_y = Math.abs(player.geometry.y - 583);
+
+        // Controllo sia X che Y per evitare che appaia se sei su un'altra piattaforma
+        if (dist_ladder_x < 200 && dist_ladder_y < 200 && !dialogue_active) {
+            btn_e_ladder.visibility.alpha = 1;
+        } else {
+            btn_e_ladder.visibility.alpha = 0;
+        }
+    }
+
+    // 3. BOTTONE R (MURO)
+    if (btn_r_muro) {
+        let dist_muro = Math.abs(player.geometry.x - 4646);
+        // Appare se vicino, se non stiamo attaccando, e se il muro non è ancora rotto
+        // (waterfall_sequence_triggered diventa true quando il muro si rompe)
+        if (dist_muro < 200 && !is_player_attacking && !waterfall_sequence_triggered) {
+            btn_r_muro.visibility.alpha = 1;
+        } else {
+            btn_r_muro.visibility.alpha = 0;
+        }
+    }
+
+    // 4. DISTRUZIONE BOTTONE R SE SI ATTACCA
+    if (is_player_attacking && btn_r_muro) {
+        PP.assets.destroy(btn_r_muro);
+        btn_r_muro = null;
+    }
 }
 
 // ==========================================================
@@ -679,17 +773,30 @@ function get_nearest_interactable_npc(player) {
 
 function open_dialogue_popup(s, npc) {
     if (dialogue_active) return;
+    
+    // --- LOGICA AGGIORNAMENTO DIALOGHI NPC ---
+    // Se è il Topo e abbiamo già parlato con lui, cambiamo i dialoghi "al volo"
+    // (Nota: qui è il gatto, ma la logica è identica)
+    if (npc.npc_name === "Gatto" && is_cat_quest_completed && has_finished_story_dialogue) {
+        let frase_random = frasi_gatto_fase3[Math.floor(Math.random() * frasi_gatto_fase3.length)];
+        npc.dialogues = [{ speaker: "npc", text: frase_random }];
+    }
+    
     dialogue_active = true;
     current_npc = npc;
     current_dialogue_index = 0;
     
     has_spoken_to_cat = true; 
 
+    // Coordinate
     let screen_center_x = 0; 
     let popup_y = 0; 
     
+    // Sfondo
     dialogue_popup = PP.assets.image.add(s, img_dialogue_bg, screen_center_x, popup_y, 0, 0);
+
     dialogue_popup.visibility.alpha = 0.85;
+
     dialogue_popup.tile_geometry.scroll_factor_x = 0;
     dialogue_popup.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_popup, 10001);
@@ -697,11 +804,13 @@ function open_dialogue_popup(s, npc) {
     let text_padding_left = 260;  
     let text_padding_top = 32;   
 
+    // Nome
     dialogue_speaker = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top, "", 22, "Luminari", "bold", "0xb3c9c9", null, 0, 0);
     dialogue_speaker.tile_geometry.scroll_factor_x = 0;
     dialogue_speaker.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_speaker, 10002);
     
+    // Testo
     dialogue_text = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top + 55, "", 20, "Avenir", "normal", "0xffffff", null, 0, 0);
     dialogue_text.tile_geometry.scroll_factor_x = 0;
     dialogue_text.tile_geometry.scroll_factor_y = 0;
@@ -725,13 +834,25 @@ function show_current_dialogue_line() {
 
 function close_dialogue_popup() {
     if (!dialogue_active) return;
+    
+    // --- CONTROLLO FINE STORIA ---
+    if (current_npc && current_npc.npc_name === "Gatto" && is_cat_quest_completed) {
+        if (!has_finished_story_dialogue) {
+            has_finished_story_dialogue = true;
+        }
+    }
+
     dialogue_active = false;
     current_npc = null;
     current_dialogue_index = 0;
     
-    safe_destroy(dialogue_popup);
-    dialogue_popup = null;
+    // Usiamo PP.assets.destroy che è il metodo corretto in PoliPhaser
+    if (dialogue_popup) {
+        PP.assets.destroy(dialogue_popup);
+        dialogue_popup = null;
+    }
     
+    // Rimuoviamo i testi
     if (dialogue_text) { PP.shapes.destroy(dialogue_text); dialogue_text = null; }
     if (dialogue_speaker) { PP.shapes.destroy(dialogue_speaker); dialogue_speaker = null; }
 }

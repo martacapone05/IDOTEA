@@ -20,6 +20,10 @@ let img_schiuma5;
 let img_smoke2; // Nuova immagine fumo
 let img_condizionatore1; // Nuova immagine condizionatore
 
+// IMMAGINI COMANDI
+let img_comando_e;
+let img_comando_r;
+
 // VARIABILI OGGETTI
 let background1;
 let background2;
@@ -34,6 +38,10 @@ let muro_pecora;
 let pecora;
 
 let funivia_ritorno_zone;
+
+// BOTTONI PROMPT
+let btn_e_pecora;
+let btn_r_muro;
 
 // VARIABILI SISTEMA DIALOGHI
 let npc_list = [];
@@ -97,7 +105,11 @@ function preload(s) {
     
     // Fumo (250x600) e Condizionatore
     img_smoke2 = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/smoke2sprite.png", 250, 600);
-    img_condizionatore1 = PP.assets.image.load(s, "assets/images/traps/condizionatore1.png"); // Immagine statica o sprite? Assumo statica per ora
+    img_condizionatore1 = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/condizionatore1.png", 132, 102); 
+
+    // CARICAMENTO COMANDI
+    img_comando_e = PP.assets.image.load(s, "assets/images/comando_e.png");
+    img_comando_r = PP.assets.image.load(s, "assets/images/comando_r.png");
 
     preload_platforms(s);
     preload_player(s);
@@ -134,7 +146,7 @@ function create(s) {
 
     // CREAZIONE CASCATE E FUMO
     create_waterfalls(s);
-    create_smoke(s); // Funzione separata per il fumo
+    create_smoke(s); 
 
     // CREAZIONE PLAYER
     create_player(s);
@@ -157,6 +169,7 @@ function create(s) {
         start_y = -1340;
         PP.game_state.set_variable("punto_di_partenza", "inizio");
     }
+    // Ripresa dalla PAUSA (comandi)
     else if (punto == "resume_pause") {
         console.log("Riprendo dalla pausa...");
         start_x = PP.game_state.get_variable("pausa_x");
@@ -228,6 +241,7 @@ function create(s) {
 
     // OVERLAP SENSORE
     let on_sensore_overlap = function(scene, p, obj_sensore) {
+        // Se non ho parlato con la pecora, non posso rompere il muro
         if (!has_spoken_to_pecora) return;
         
         p.near_breakable_wall = true;
@@ -252,6 +266,21 @@ function create(s) {
 
 
     // ===============================================
+    // *** BOTTONI (PROMPT) ***
+    // ===============================================
+    
+    // Bottone E (Pecora) - 12899, -1275
+    btn_e_pecora = PP.assets.image.add(s, img_comando_e, 12899, -1275, 0, 0);
+    btn_e_pecora.visibility.alpha = 0; 
+    PP.layers.set_z_index(btn_e_pecora, 9999);
+
+    // Bottone R (Muro) - 13301, -1275
+    btn_r_muro = PP.assets.image.add(s, img_comando_r, 13301, -1275, 0, 0);
+    btn_r_muro.visibility.alpha = 0; 
+    PP.layers.set_z_index(btn_r_muro, 9999);
+
+
+    // ===============================================
     // *** 10. HUD E CAMERA ***
     // ===============================================
     create_hud(s, player); 
@@ -268,6 +297,7 @@ function create(s) {
         }
     });
 
+    // Inizializza camera
     PP.camera.start_follow(s, player, 0, 120);
     
     // BARRIERE
@@ -282,6 +312,7 @@ function create(s) {
     player.cam_offset_x = 0;
     player.cam_target_x = 0;
     
+    // INIZIALIZZIAMO ANCHE LA Y, così l'interpolazione funziona bene
     player.cam_offset_y = 120;
     player.cam_target_y = 120;
 
@@ -298,20 +329,32 @@ function create(s) {
 
 
 function update(s) {
+    // CAMERA BOUNDS
     PP.camera.set_bounds(s, -1300, -2550, 17620, 6000);
     
+    // GESTIONE DIALOGHI (TASTO E)
     manage_npc_interaction(s, player);
 
+    // GESTIONE TASTO R (ROTTURA MURO)
     if (PP.interactive.kb.is_key_down(s, PP.key_codes.R)) {
         
+        // Controllo se il flag è attivo (settato dall'overlap)
         if (!is_player_attacking && player.near_breakable_wall && player.current_wall && !player.current_wall.is_broken) {
             
             is_player_attacking = true;
-            player.is_acting = true; 
+            player.is_acting = true; // Blocca movimento
             PP.physics.set_velocity_x(player, 0);
             
+            // ANIMAZIONE PICCONE
             PP.assets.sprite.animation_play(player, "piccone");
             
+            // Distruzione bottone R
+            if (btn_r_muro) {
+                PP.assets.destroy(btn_r_muro);
+                btn_r_muro = null;
+            }
+
+            // Timer rottura
             PP.timers.add_timer(s, 500, function() {
                 
                 if(player.current_wall) {
@@ -321,10 +364,12 @@ function update(s) {
                     PP.game_state.set_variable("muri_rotti", muri + 1);
                 }
                 
+                // Timer fine (1.5s dopo)
                 PP.timers.add_timer(s, 1500, function() {
                     safe_destroy(player.current_wall);
                     wall_broken_pecora = true;
                     
+                    // MODIFICA: FAI PARTIRE IL MULINO QUI
                     if (mulino_anim) {
                         PP.assets.sprite.animation_play(mulino_anim, "spin");
                     }
@@ -337,6 +382,7 @@ function update(s) {
         }
     }
 
+    // Animazione player
     if (is_dialogue_active()) {
         PP.physics.set_velocity_x(player, 0);
         PP.assets.sprite.animation_play(player, "idle");
@@ -345,13 +391,19 @@ function update(s) {
         manage_player_update(s, player);
     }
 
+    // ===============================================
+    // *** LOGICA CAMERA CORRETTA ***
+    // ===============================================
+
+    // 1. Calcolo offset X (Guardare avanti)
     let vel_x = PP.physics.get_velocity_x(player);
-    if (vel_x > 50) player.cam_target_x = -200;      
-    else if (vel_x < -50) player.cam_target_x = 200; 
-    else player.cam_target_x = 0;                    
+    if (vel_x > 50) player.cam_target_x = -200;      // Guarda a destra (Player a sinistra)
+    else if (vel_x < -50) player.cam_target_x = 200; // Guarda a sinistra (Player a destra)
+    else player.cam_target_x = 0;                    // Centrato
 
     player.cam_offset_x += (player.cam_target_x - player.cam_offset_x) * 0.03;
 
+    // 2. Calcolo offset Y (Guardare sopra/sotto in certe zone)
     if (player.geometry.x > 7500) {
         player.cam_target_y = -20;
     } else {
@@ -360,14 +412,19 @@ function update(s) {
 
     player.cam_offset_y += (player.cam_target_y - player.cam_offset_y) * 0.03;
 
+    // 3. APPLICAZIONE OFFSET ALLA CAMERA (Questa riga mancava!)
     PP.camera.set_follow_offset(s, player.cam_offset_x, player.cam_offset_y);
 
+    // ===============================================
+    
     let scroll_x = PP.camera.get_scroll_x(s);
     background1.tile_geometry.x = scroll_x * 0.1;
     background2.tile_geometry.x = scroll_x * 0.2;
     background3.tile_geometry.x = scroll_x * 0.5;
 
+    // GAME OVER
     if (player.geometry.y > 4000) {
+        console.log("Caduto nel vuoto! Game Over...");
         PP.game_state.set_variable("last_scene", "lvl2_pt1");
         PP.scenes.start("game_over");
 
@@ -381,9 +438,37 @@ function update(s) {
         respawn_hearts(s, player);
     }
 
-    if (player.geometry.x > 16300) { 
+    // --- MODIFICATO QUI: TRIGGER PIU' A DESTRA ---
+    if (player.geometry.x > 16300) { // Era 15930
         PP.game_state.set_variable("punto_di_partenza", "avanti_da_pt1");
         PP.scenes.start("lvl2_pt2");
+    }
+
+    // ===============================================
+    // *** GESTIONE VISIBILITÀ BOTTONI (500px) ***
+    // ===============================================
+    
+    // Bottone E (Pecora)
+    if (btn_e_pecora) {
+        // La pecora è a circa 12840
+        let dist = Math.abs(player.geometry.x - 12840);
+        if (dist < 500 && !dialogue_active) {
+            btn_e_pecora.visibility.alpha = 1;
+        } else {
+            btn_e_pecora.visibility.alpha = 0;
+        }
+    }
+
+    // Bottone R (Muro)
+    if (btn_r_muro) {
+        // Il muro è a circa 13226
+        let dist = Math.abs(player.geometry.x - 13226);
+        // Mostra solo se vicino, non attaccando e muro non rotto
+        if (dist < 500 && !is_player_attacking && !wall_broken_pecora) {
+            btn_r_muro.visibility.alpha = 1;
+        } else {
+            btn_r_muro.visibility.alpha = 0;
+        }
     }
 
 }
@@ -481,11 +566,14 @@ function close_dialogue_popup() {
     current_npc = null;
     current_dialogue_index = 0;
     
+    // RIMUOVI LO SFONDO (VIGNETTA)
     if (dialogue_popup) {
+        // Usiamo PP.assets.destroy che è il metodo corretto in PoliPhaser
         PP.assets.destroy(dialogue_popup); 
         dialogue_popup = null;
     }
     
+    // RIMUOVI I TESTI
     if (dialogue_text) { 
         PP.shapes.destroy(dialogue_text); 
         dialogue_text = null; 
@@ -532,10 +620,12 @@ function is_dialogue_active() {
 
 function safe_destroy(obj) {
     if (!obj) return;
+    // Usa il metodo corretto di PoliPhaser per distruggere asset
     if (obj.ph_obj) {
         PP.assets.destroy(obj);
         return;
     }
+    // Fallback: Nascondi e sposta via
     if (obj.visibility) obj.visibility.alpha = 0;
     if (obj.geometry) obj.geometry.y = 10000;
 }
@@ -543,20 +633,23 @@ function safe_destroy(obj) {
 
 function create_waterfalls(s) {
     
+    // Funzione helper modificata per accettare z_index personalizzato
+    // Se z_index non viene passato, usa 26 come default
     let create_column = function(image, anim, x, start_y, limit_y, h, custom_z) {
         
-        let z_index = (custom_z !== undefined) ? custom_z : 26; 
+        let z_index = (custom_z !== undefined) ? custom_z : 26; // Default 26
 
         let current_y = start_y;
         while(current_y < limit_y) {
             let w = PP.assets.sprite.add(s, image, x, current_y, 0, 1);
             PP.assets.sprite.animation_add(w, anim, 0, 9, 10, -1);
             PP.assets.sprite.animation_play(w, anim);
-            PP.layers.set_z_index(w, z_index); 
+            PP.layers.set_z_index(w, z_index); // Usa lo z-index dinamico
             current_y += h - 15;
         }
     };
 
+    // Cascate standard (Z-index 26 di default)
     create_column(img_waterfall1, "flow1", 1376, 622, 1030, 211);
     create_column(img_waterfall1, "flow1", 4378, -1023, 1030, 211);
     create_column(img_waterfall2, "flow2", 2492, 255, 1030, 210);
@@ -567,6 +660,8 @@ function create_waterfalls(s) {
     create_column(img_waterfall2, "flow2", 5889, -444, 1030, 210);
     create_column(img_waterfall2, "flow2", 5796, -1005, 1030, 210);
 
+    // --- LE TUE NUOVE COLONNE CON Z-INDEX 8 ---
+    // Passiamo 8 come ultimo argomento
     create_column(img_waterfall5, "flow5", 13493, -888, 1030, 210, 8);
     create_column(img_waterfall5, "flow5", 13678, -888, 1030, 210, 8);
     create_column(img_waterfall5, "flow5", 13862, -888, 1030, 210, 8);
@@ -576,9 +671,13 @@ function create_waterfalls(s) {
 function create_smoke(s) {
     let add_smoke = function(x, y) {
         let smoke = PP.assets.sprite.add(s, img_smoke2, x, y, 0, 1);
-        PP.assets.sprite.animation_add(smoke, "smoke_anim", 0, 5, 8, -1);
+        
+        // --- 0-5 Frame (SICURO PER EVITARE CRASH) ---
+        // Se cambi l'immagine con una larga 6000px, puoi rimettere 23 qui.
+        PP.assets.sprite.animation_add(smoke, "smoke_anim", 0, 5, 10, -1);
+        
         PP.assets.sprite.animation_play(smoke, "smoke_anim");
-        PP.layers.set_z_index(smoke, 20); // Z-index visibile
+        PP.layers.set_z_index(smoke, 20); 
     };
 
     // Coordinate Fumo
@@ -588,8 +687,11 @@ function create_smoke(s) {
     add_smoke(1160, -2683);
     add_smoke(6146, -2343);
 
-    // Condizionatore
-    let cond = PP.assets.image.add(s, img_condizionatore1, 818, -1503, 0, 1);
+    // Condizionatore (ANIMAZIONE AGGIUNTA)
+    let cond = PP.assets.sprite.add(s, img_condizionatore1, 818, -1401, 0, 1);
+    // Assumiamo che il condizionatore abbia 4 frame (0-3). Se crasha, prova 0-0.
+    PP.assets.sprite.animation_add(cond, "spin_cond", 0, 3, 10, -1);
+    PP.assets.sprite.animation_play(cond, "spin_cond");
     PP.layers.set_z_index(cond, 10);
 }
 

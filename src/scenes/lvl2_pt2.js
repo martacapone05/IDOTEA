@@ -135,8 +135,7 @@ function create(s) {
     }
 
     create_hud(s, player);
-    create_collectible_fragment(s, 1200, 470, player);
-    create_collectible_heart(s, 1700, 470, player);
+    create_collectible_fragment(s, 479, -3540, player);
 
     PP.camera.start_follow(s, player, 0, -40);
 

@@ -6,6 +6,10 @@ let img_topo;
 let img_dialogue_bg; 
 let img_condizionatore2;
 
+// NUOVE IMMAGINI COMANDI
+let img_comando_r;
+let img_comando_e;
+
 let overlay; 
 let info;
 let spruzzo_anim;
@@ -13,6 +17,10 @@ let img_muro_rompibile;
 let player;
 let floor;
 let traps = [];
+
+// BOTTONI OGGETTI
+let btn_r;
+let btn_e;
 
 // Lista NPC e variabili dialogo
 let npc_list = [];
@@ -27,8 +35,30 @@ let action_key_was_pressed = false;
 // Variabile per gestione rottura muro
 let is_player_attacking = false;
 
+// NUOVA VARIABILE STATO TOPO
+let has_spoken_to_topo = false;
+
 // Configurazione NPC
 const NPC_INTERACTION_RANGE = 200; 
+
+// --- DEFINIZIONE DIALOGHI ---
+let dialoghi_topo_fase1 = [
+    { speaker: "npc", text: "Coff coff… Grazie, ero intrappolato da ore…\nqualcuno deve avermi bloccato." },
+    { speaker: "player", text: "Il tubo deve aver ceduto, questo posto sta cadendo a pezzi\nper colpa delle tossine nell’acqua e della ruggine." },
+    { speaker: "npc", text: "Ma noi topi delle fogne viviamo qui da generazioni.\nLe acque sono diventate più dense, sì… ma così restano anche più calde d’inverno." },
+    { speaker: "player", text: "È veleno! Metalli pesanti, scarti chimici…\nTi confonde i sensi, ti indebolisce senza che tu te ne accorga." },
+    { speaker: "npc", text: "Effettivamente, sento le zampe sempre più pesanti ultimamente…\ne molti dei miei amici sono scomparsi nelle pozze più profonde…" },
+    { speaker: "player", text: "È tutto frutto dell’incantesimo che ha avvelenato la Fonte della Vita." },
+    { speaker: "npc", text: "La… Fonte? Quindi tutto questo - questo fango, questo buio,\nquesta fatica - non è la normalità?" },
+    { speaker: "player", text: "No. E posso rimediare, se arrivo in cima al Monte Tefnut." },
+    { speaker: "npc", text: "Allora vai. Ti devo la vita, Tillidak.\nFa’ tornare il mondo limpido… anche le nostre fogne." }
+];
+
+let frasi_topo_fase2 = [
+    "Continua così. Anche dal buio si può guarire.",
+    "Non mi ero mai accorto di quanto fosse pesante l’aria qui sotto."
+];
+
 
 function preload(s) {
     preload_hud(s);
@@ -52,6 +82,10 @@ function preload(s) {
 
     // SFONDO DIALOGO
     img_dialogue_bg = PP.assets.image.load(s, "assets/images/dialoghi/dialogo1.png");
+    
+    // CARICAMENTO COMANDI
+    img_comando_r = PP.assets.image.load(s, "assets/images/comando_r.png");
+    img_comando_e = PP.assets.image.load(s, "assets/images/comando_e.png");
 
     preload_platforms(s);
     preload_player(s);
@@ -64,6 +98,7 @@ function create(s) {
 
     reset_npcs(); 
     is_player_attacking = false;
+    has_spoken_to_topo = false; // Reset stato dialogo
 
     let start_x = 80;
     let start_y = 500;
@@ -123,7 +158,7 @@ function create(s) {
     create_platforms_lvl1_pt1(s, player);
 
     // ============================================================
-    // *** NPC TOPO (Con Dialogo) ***
+    // *** NPC TOPO (Con Dialogo Dinamico) ***
     // ============================================================
     let topo = PP.assets.sprite.add(s, img_topo, 8259, 27, 0, 1);
     
@@ -132,20 +167,8 @@ function create(s) {
     PP.assets.sprite.animation_play(topo, "idle_topo");
     PP.physics.add(s, topo, PP.physics.type.STATIC);
 
-    // DIALOGO COMPLETO
-    let dialoghi_topo = [
-        { speaker: "npc", text: "Coff coff… Grazie, ero intrappolato da ore…\nqualcuno deve avermi bloccato." },
-        { speaker: "player", text: "Il tubo deve aver ceduto, questo posto sta cadendo a pezzi\nper colpa delle tossine nell’acqua e della ruggine." },
-        { speaker: "npc", text: "Ma noi topi delle fogne viviamo qui da generazioni.\nLe acque sono diventate più dense, sì… ma così restano anche più calde d’inverno." },
-        { speaker: "player", text: "È veleno! Metalli pesanti, scarti chimici…\nTi confonde i sensi, ti indebolisce senza che tu te ne accorga." },
-        { speaker: "npc", text: "Effettivamente, sento le zampe sempre più pesanti ultimamente…\ne molti dei miei amici sono scomparsi nelle pozze più profonde…" },
-        { speaker: "player", text: "È tutto frutto dell’incantesimo che ha avvelenato la Fonte della Vita." },
-        { speaker: "npc", text: "La… Fonte? Quindi tutto questo - questo fango, questo buio,\nquesta fatica - non è la normalità?" },
-        { speaker: "player", text: "No. E posso rimediare, se arrivo in cima al Monte Tefnut." },
-        { speaker: "npc", text: "Allora vai. Ti devo la vita, Tillidak.\nFa’ tornare il mondo limpido… anche le nostre fogne." }
-    ];
-
-    register_npc(topo, "Topo", dialoghi_topo);
+    // Registriamo l'NPC con il dialogo iniziale
+    register_npc(topo, "Topo", dialoghi_topo_fase1);
     // ============================================================
 
 
@@ -174,9 +197,24 @@ function create(s) {
     PP.physics.add_overlap_f(s, player, sensore, on_sensore_overlap);
 
 
+    // ===============================================
+    // *** AGGIUNTA BOTTONI (Prompt) ***
+    // ===============================================
+    
+    // Bottone R (Vicino al muro)
+    btn_r = PP.assets.image.add(s, img_comando_r, 7857, -91, 0, 0);
+    btn_r.visibility.alpha = 0; // Invisibile all'inizio
+    PP.layers.set_z_index(btn_r, 9999); // Alto ma sotto overlay e HUD
+
+    // Bottone E (Vicino al topo)
+    btn_e = PP.assets.image.add(s, img_comando_e, 8300, -91, 0, 0);
+    btn_e.visibility.alpha = 0; // Invisibile all'inizio
+    PP.layers.set_z_index(btn_e, 9999); 
+
+
     create_hud(s, player);
-    create_collectible_fragment(s, 1200, 470, player);
-    create_collectible_heart(s, 1700, 470, player);
+    create_collectible_fragment(s, 10553, -1139, player);
+    create_collectible_heart(s, 5750, 100, player);
 
     // Trappole
     traps = [];
@@ -227,6 +265,12 @@ function update(s) {
             player.is_acting = true;
             PP.physics.set_velocity_x(player, 0);
             PP.assets.sprite.animation_play(player, "piccone");
+            
+            // --- DISTRUZIONE BOTTONE R APPENA SI ATTACCA ---
+            if (btn_r) {
+                PP.assets.destroy(btn_r);
+                btn_r = null;
+            }
             
             PP.timers.add_timer(s, 500, function() {
                 if(player.current_wall) {
@@ -318,6 +362,32 @@ function update(s) {
         PP.game_state.set_variable("punto_di_partenza", "arrivo_da_pt1");
         PP.scenes.start("lvl1_pt2");
     }
+
+    // =======================================================
+    // *** GESTIONE VISIBILITÀ BOTTONI (PROMPT) ***
+    // =======================================================
+    
+    // GESTIONE BOTTONE R (MURO)
+    if (btn_r) {
+        let dist_muro = Math.abs(player.geometry.x - 7857);
+        if (dist_muro < 500 && !is_player_attacking) {
+            btn_r.visibility.alpha = 1;
+        } else {
+            btn_r.visibility.alpha = 0;
+        }
+    }
+
+    // GESTIONE BOTTONE E (TOPO)
+    if (btn_e) {
+        let dist_topo = Math.abs(player.geometry.x - 8174);
+        
+        // Deve essere vicino E non deve esserci un dialogo attivo
+        if (dist_topo < 500 && !dialogue_active) {
+            btn_e.visibility.alpha = 1;
+        } else {
+            btn_e.visibility.alpha = 0;
+        }
+    }
 }
 
 function destroy(s) {
@@ -360,6 +430,14 @@ function get_nearest_interactable_npc(player) {
 
 function open_dialogue_popup(s, npc) {
     if (dialogue_active) return;
+    
+    // --- LOGICA AGGIORNAMENTO DIALOGHI NPC ---
+    // Se è il Topo e abbiamo già parlato con lui, cambiamo i dialoghi "al volo"
+    if (npc.npc_name === "Topo" && has_spoken_to_topo) {
+        let frase_random = frasi_topo_fase2[Math.floor(Math.random() * frasi_topo_fase2.length)];
+        npc.dialogues = [{ speaker: "npc", text: frase_random }];
+    }
+    
     dialogue_active = true;
     current_npc = npc;
     current_dialogue_index = 0;
@@ -413,6 +491,11 @@ function close_dialogue_popup() {
     if (!dialogue_active) return;
     
     console.log("CHIUSURA DIALOGO AVVIATA");
+    
+    // --- SEGNA CHE ABBIAMO PARLATO CON L'NPC ---
+    if (current_npc && current_npc.npc_name === "Topo") {
+        has_spoken_to_topo = true;
+    }
     
     dialogue_active = false;
     current_npc = null;
