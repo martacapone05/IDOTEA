@@ -7,6 +7,10 @@ let img_colonna_finale;
 // IMMAGINI
 let img_avvoltoio;
 let img_dialogue_bg;
+// NUOVE IMMAGINI CASCATE
+let img_waterfall3;
+let img_waterfall1; // Variabile per la nuova cascata
+let img_overlay_cascata;
 
 let background;
 let info;
@@ -75,6 +79,14 @@ function preload(s) {
     img_colonna_finale = PP.assets.sprite.load_spritesheet(s, "assets/images/colonna_finale_sprite.png", 900, 450);
     img_avvoltoio = PP.assets.sprite.load_spritesheet(s, "assets/images/sprite_avvoltoio.png", 746, 533);
     img_dialogue_bg = PP.assets.image.load(s, "assets/images/dialoghi/dialogo4.png");
+    
+    // CARICAMENTO NUOVE CASCATE E OVERLAY
+    img_waterfall3 = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/waterfall3sprites.png", 57, 203);
+    // Caricamento Waterfall 1 (dimensioni standard 119x211)
+    img_waterfall1 = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/waterfall1sprites.png", 119, 211);
+    
+    img_overlay_cascata = PP.assets.image.load(s, "assets/images/overlay_cascata.png");
+
     preload_platforms(s);
     preload_player(s);
 }
@@ -82,7 +94,7 @@ function preload(s) {
 function create(s) {
     scene_ref = s; 
 
-    // Checkpoint: salva questo livello come punto di respawn
+    // Checkpoint
     PP.game_state.set_variable("last_scene", "lvl3");
 
     reset_npcs();
@@ -93,17 +105,101 @@ function create(s) {
     level_completed = false;
     current_fly_height = 300;
 
+    // SFONDO
     background = PP.assets.tilesprite.add(s, img_background, 0, 0, 1280, 800, 0, 0);
     background.tile_geometry.scroll_factor_x = 0;
     background.tile_geometry.scroll_factor_y = 0;
+    PP.layers.set_z_index(background, -100);
+
+    // ===============================================
+    // *** CASCATE TIPO 3 (Z-INDEX -5) ***
+    // ===============================================
+    let create_wf3_column = function(x, y_start, y_end) {
+        let h = 203; 
+        let overlap = 20;
+        let stride = h - overlap; 
+        let step = (y_end > y_start) ? stride : -stride;
+        let cur = y_start;
+        let condition = (y_end > y_start) ? () => cur < y_end : () => cur > y_end;
+
+        while (condition()) {
+             let w = PP.assets.sprite.add(s, img_waterfall3, x, cur, 0, 1);
+             PP.assets.sprite.animation_add(w, "flow3", 0, 9, 10, -1);
+             PP.assets.sprite.animation_play(w, "flow3");
+             PP.layers.set_z_index(w, -5); 
+             cur += step;
+        }
+    };
+
+    create_wf3_column(-1081, -3147, -1200);
+    create_wf3_column(126, 265, -540);
+    create_wf3_column(3796, -931, -570);
+    create_wf3_column(3317, -2094, -1740);
+    create_wf3_column(4763, -3622, -2430);
+    create_wf3_column(5424, -4158, -2430);
+    create_wf3_column(4763, -3622, -4375);
+    create_wf3_column(2574, -5346, -4375);
+
+    // ===============================================
+    // *** CASCATE TIPO 1 (NUOVA AGGIUNTA) ***
+    // ===============================================
+    
+    // Funzione helper per Waterfall 1
+    let create_wf1_column = function(x, y_start, y_end) {
+        let h = 211; 
+        let overlap = 20;
+        let stride = h - overlap;
+        let cur = y_start;
+        
+        // Assumiamo direzione verso il basso come richiesto dalle coordinate (881 -> 1580)
+        while (cur < y_end) {
+             let w = PP.assets.sprite.add(s, img_waterfall1, x, cur + h, 0, 1); // Pivot 0,1: y è il fondo
+             PP.assets.sprite.animation_add(w, "flow1", 0, 9, 10, -1);
+             PP.assets.sprite.animation_play(w, "flow1");
+             PP.layers.set_z_index(w, -5); // Stesso livello delle altre
+             cur += stride;
+        }
+    };
+
+    // 1. Colonna Waterfall 1
+    create_wf1_column(2860, 881, 1580);
+
+    // 2. Cascata Singola Waterfall 1
+    let wf1_single = PP.assets.sprite.add(s, img_waterfall1, 4544, 264, 0, 1);
+    PP.assets.sprite.animation_add(wf1_single, "flow1", 0, 9, 10, -1);
+    PP.assets.sprite.animation_play(wf1_single, "flow1");
+    PP.layers.set_z_index(wf1_single, -5);
+
+    // 3. Overlay Waterfall 1 (Z-index -4: sopra cascata, sotto player 0)
+    let overlay_wf1 = PP.assets.image.add(s, img_overlay_cascata, 4481, 333, 0, 1);
+    PP.layers.set_z_index(overlay_wf1, -4);
+
+
+    // ===============================================
+    // *** CASCATA SINGOLA WF3 E OVERLAY ***
+    // ===============================================
+    let wf3_single = PP.assets.sprite.add(s, img_waterfall3, 2284, -6326, 0, 1);
+    PP.assets.sprite.animation_add(wf3_single, "flow3", 0, 9, 10, -1);
+    PP.assets.sprite.animation_play(wf3_single, "flow3");
+    PP.layers.set_z_index(wf3_single, 10); 
+
+    let overlay_wf3 = PP.assets.image.add(s, img_overlay_cascata, 2226, -6271, 0, 0);
+    PP.layers.set_z_index(overlay_wf3, 11); 
+
 
     // SPAWN INIZIALE LVL3
-    let start_x = -1600;
+    let start_x = -1400; 
     let start_y = 590;
 
     if (PP.game_state.get_variable("punto_di_partenza") == "fine") {
-        start_x = -1600; // Spostato a destra per non attivare il loop
-        start_y = 590;
+        start_x = -1400; 
+        start_y = 600;
+        PP.game_state.set_variable("punto_di_partenza", "inizio");
+    }
+    else if (PP.game_state.get_variable("punto_di_partenza") == "resume_pause") {
+        console.log("Riprendo dalla pausa...");
+        start_x = PP.game_state.get_variable("pausa_x");
+        start_y = PP.game_state.get_variable("pausa_y");
         PP.game_state.set_variable("punto_di_partenza", "inizio");
     }
 
@@ -112,7 +208,7 @@ function create(s) {
     PP.physics.set_collision_rectangle(player, 138, 230, 20, 64);
     player.last_column_touch_time = 0;
 
-    // ... (Logica colonne omessa per brevità, ma resta nel tuo file)
+    // ... (Logica colonne) ...
     let create_base_column = function(x, y) {
         let col = PP.assets.sprite.add(s, img_colonna_base, x, y, 0, 1);
         col.is_broken = false;
@@ -179,9 +275,14 @@ function create(s) {
     register_npc(avvoltoio, "Avvoltoio", dialogo_avvoltoio);
 
     create_hud(s, player);
-    create_pause_button(s, player);
-    PP.camera.start_follow(s, player, 0, 120);
-
+    
+    PP.camera.start_follow(s, player, 0, -40); 
+    
+    player.cam_offset_x = 0; 
+    player.cam_target_x = 0;
+    
+    player.cam_offset_y = -40;
+    player.cam_target_y = -40;
 
     PP.camera.set_deadzone(s, 10, 50);
 
@@ -193,20 +294,13 @@ function create(s) {
 
 function update(s) {
     // CAMERA BOUNDS
-    PP.camera.set_bounds(s, -1970, -7500, 8600, 8830);
+    PP.camera.set_bounds(s, -1500, -7500, 8600, 8830);
 
-    // 0. GESTIONE MENU PAUSA
-    manage_pause_input(s);
-    if (is_game_paused()) {
-        PP.physics.set_velocity_x(player, 0);
-        PP.physics.set_velocity_y(player, 0);
-        return;
-    }
 
     manage_npc_interaction(s, player);
 
     // --- TRIGGER RITORNO A LVL2_PT2 ---
-    if (player.geometry.x <= -1930) {
+    if (player.geometry.x <= -1480) { 
         PP.game_state.set_variable("punto_di_partenza", "fine");
         PP.scenes.start("lvl2_pt2");
     }
@@ -261,7 +355,23 @@ function update(s) {
     if (!is_dialogue_active() && !is_player_attacking) manage_player_update(s, player);
     else if (is_dialogue_active()) { PP.physics.set_velocity_x(player, 0); PP.assets.sprite.animation_play(player, "idle"); }
 
-    PP.camera.set_follow_offset(s, 0, 120);
+    // --- LOGICA CAMERA COMPLETA (X + Y) ---
+    let vel_x = PP.physics.get_velocity_x(player);
+    if (vel_x > 50) player.cam_target_x = -200;
+    else if (vel_x < -50) player.cam_target_x = 200;
+    else player.cam_target_x = 0;
+
+    player.cam_offset_x += (player.cam_target_x - player.cam_offset_x) * 0.03;
+
+    if (player.geometry.y < -5800) { 
+        player.cam_target_y = 270; // Molto in alto
+    } else {
+        player.cam_target_y = 40;  // Normale
+    }
+    
+    player.cam_offset_y += (player.cam_target_y - player.cam_offset_y) * 0.02;
+
+    PP.camera.set_follow_offset(s, player.cam_offset_x, player.cam_offset_y);
 
     if (player.geometry.y > 2000) {
         PP.game_state.set_variable("last_scene", "lvl3");

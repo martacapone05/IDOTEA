@@ -97,14 +97,21 @@ function create(s) {
 
     // Ritorno da lvl3 (backtracking)
     if (punto == "fine") {
-        start_x = 4300; 
-        start_y = -4500;
+        // --- MODIFICATO QUI: PIU' A SINISTRA ---
+        start_x = 4250; // Era 4300, spostato leggermente più a sinistra
+        start_y = -4390;
         PP.game_state.set_variable("punto_di_partenza", "inizio");
     }
     // Arrivo da lvl2_pt1 (andando avanti)
     else if (punto == "avanti_da_pt1") {
         start_x = 0;
         start_y = 550;
+        PP.game_state.set_variable("punto_di_partenza", "inizio");
+    }
+    else if (punto == "resume_pause") {
+        console.log("Riprendo dalla pausa...");
+        start_x = PP.game_state.get_variable("pausa_x");
+        start_y = PP.game_state.get_variable("pausa_y");
         PP.game_state.set_variable("punto_di_partenza", "inizio");
     }
     // Fallback per compatibilità
@@ -128,7 +135,6 @@ function create(s) {
     }
 
     create_hud(s, player);
-    create_pause_button(s, player);
     create_collectible_fragment(s, 1200, 470, player);
     create_collectible_heart(s, 1700, 470, player);
 
@@ -152,20 +158,14 @@ function update(s) {
     // CAMERA BOUNDS
     PP.camera.set_bounds(s, -350, -6720, 5000, 8720);
 
-    // 0. GESTIONE MENU PAUSA
-    manage_pause_input(s);
-    if (is_game_paused()) {
-        PP.physics.set_velocity_x(player, 0);
-        PP.physics.set_velocity_y(player, 0);
-        return;
-    }
 
     manage_player_update(s, player);    
 
     // --- LOGICA PASSAGGI DI LIVELLO ---
     
     // 1. VERSO LVL 3 (NUOVE COORDINATE)
-    if (player.geometry.x >= 4500 && player.geometry.y <= -4300) {
+    // --- MODIFICATO QUI: TRIGGER PIU' A DESTRA ---
+    if (player.geometry.x >= 4650 && player.geometry.y <= -4300) { // Era 4500
         PP.game_state.set_variable("punto_di_partenza", "inizio");
         PP.scenes.start("lvl3");
     }

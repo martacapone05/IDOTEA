@@ -4,6 +4,7 @@ let img_overlay;
 let img_light;
 let img_topo; 
 let img_dialogue_bg; 
+let img_condizionatore2;
 
 let overlay; 
 let info;
@@ -42,6 +43,9 @@ function preload(s) {
     spruzzo_anim = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/spritesheet_spruzzo.png", 349, 837);
     img_muro_rompibile = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_muro.png", 364, 354);
     img_light = PP.assets.sprite.load_spritesheet(s, "assets/images/light1sprites.png", 707, 873);
+    
+    // NUOVO CARICAMENTO: Condizionatore 2
+    img_condizionatore2 = PP.assets.sprite.load_spritesheet(s, "assets/images/condizionatore2.png", 172, 134);
 
     // NPC TOPO
     img_topo = PP.assets.sprite.load_spritesheet(s, "assets/images/sprite_topo.png", 209, 214);
@@ -68,10 +72,19 @@ function create(s) {
         start_x = 11250;
         start_y = -1210;
         PP.game_state.set_variable("punto_di_partenza", "inizio");
-    } else {
+    } else if (PP.game_state.get_variable("punto_di_partenza") == "resume_pause") {
+        console.log("Riprendo dalla pausa...");
+        start_x = PP.game_state.get_variable("pausa_x");
+        start_y = PP.game_state.get_variable("pausa_y");
+        PP.game_state.set_variable("punto_di_partenza", "inizio");
+    }
+    else {
         PP.game_state.set_variable("player_hp", 4);
         PP.game_state.set_variable("player_fragments", 0);
     }
+
+
+
 
     // LUCI
     let light_coords = [{x: 916, y: 404}, {x: 6167, y: -765}, {x: 9786, y: -1140}];
@@ -83,6 +96,12 @@ function create(s) {
             PP.assets.sprite.animation_play(light, "flash");
         }, true); 
     });
+
+    // NUOVO CONDIZIONATORE 2 (9548, -973)
+    let cond2 = PP.assets.sprite.add(s, img_condizionatore2, 10910, -980, 0, 1);
+    PP.assets.sprite.animation_add(cond2, "spin", 0, 4, 10, -1);
+    PP.assets.sprite.animation_play(cond2, "spin");
+    PP.layers.set_z_index(cond2, 15); // Z-index intermedio per visibilità corretta
 
     // PLAYER
     player = PP.assets.sprite.add(s, img_player, start_x, start_y, 0.5, 1);
@@ -156,7 +175,6 @@ function create(s) {
 
 
     create_hud(s, player);
-    create_pause_button(s, player);
     create_collectible_fragment(s, 1200, 470, player);
     create_collectible_heart(s, 1700, 470, player);
 
@@ -198,13 +216,6 @@ function update(s) {
     // CAMERA BOUNDS
     PP.camera.set_bounds(s, 0, -2100, 12000, 3500);
 
-    // 0. GESTIONE MENU PAUSA
-    manage_pause_input(s);
-    if (is_game_paused()) {
-        PP.physics.set_velocity_x(player, 0);
-        PP.physics.set_velocity_y(player, 0);
-        return;
-    }
 
     // 1. GESTIONE INPUT DIALOGHI
     manage_npc_interaction(s, player);

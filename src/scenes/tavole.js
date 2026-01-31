@@ -1,8 +1,6 @@
 let tavole_bg;
-let tavole_title;
 let tavole_current = 0; // 0 = Prima, 1 = Seconda, 2 = Terza
 let tavole_sprite = null;
-let tavole_counter;
 let tavole_hint_left;
 let tavole_hint_right;
 let tavole_key_was_pressed = false;
@@ -11,9 +9,28 @@ let is_animating = false; // Variabile per bloccare input durante le transizioni
 // Variabile per caricare l'immagine
 let img_tavole_spritesheet;
 
+// --- VARIABILI PER FRECCE ---
+let img_freccia_sx;
+let img_freccia_dx;
+
+// --- NUOVE VARIABILI MENU ---
+let img_menu_princ;
+let btn_home_zone;
+
+// --- VARIABILI PER CLICK FRECCE ---
+let zone_sx;
+let zone_dx;
+
 function preload(s) {
     // Carica lo spritesheet unico (2360x1640 per frame, 15 frame totali)
     img_tavole_spritesheet = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_tavole.png", 2360, 1640);
+
+    // --- CARICAMENTO IMMAGINI FRECCE ---
+    img_freccia_sx = PP.assets.image.load(s, "assets/images/freccia_sx.png");
+    img_freccia_dx = PP.assets.image.load(s, "assets/images/freccia_dx.png");
+
+    // --- CARICAMENTO IMMAGINE MENU ---
+    img_menu_princ = PP.assets.image.load(s, "assets/images/menu_princ.png");
 }
 
 function create(s) {
@@ -21,16 +38,14 @@ function create(s) {
     is_animating = false;
     
     // Sfondo bianco
-    tavole_bg = PP.shapes.rectangle_add(s, 640, 400, 1280, 800, "0xFFFFFF", 1);
+    tavole_bg = PP.shapes.rectangle_add(s, 640, 400, 1280, 800, "0xe5e4d3", 1);
     
     
     // --- CREAZIONE SPRITE TAVOLE ---
-    tavole_sprite = PP.assets.sprite.add(s, img_tavole_spritesheet, 640, 355, 0.5, 0.5);
+    tavole_sprite = PP.assets.sprite.add(s, img_tavole_spritesheet, 640, 375, 0.5, 0.5);
     
-    // Adattamento scala (l'immagine è molto grande)
-    // 1640 * 0.42 = ~688px altezza (sta bene in 800px)
-    tavole_sprite.geometry.scale_x = 0.48;
-    tavole_sprite.geometry.scale_y = 0.48;
+    tavole_sprite.geometry.scale_x = 0.44;
+    tavole_sprite.geometry.scale_y = 0.44;
 
     // --- DEFINIZIONE ANIMAZIONI ---
     // Frame 0-14 totali
@@ -51,53 +66,48 @@ function create(s) {
     // Partiamo dallo stato statico 0
     PP.assets.sprite.animation_play(tavole_sprite, "static_0");
 
-    // Contatore "1 / 3"
-    tavole_counter = PP.shapes.text_styled_add(s,
-        640, 750,
-        "1 / 3",
-        30,
-        "Georgia",
-        "normal",
-        "0x000000",
-        null,
-        0.5, 0.5
-    );
+    // --- SOSTITUZIONE FRECCE TESTUALI CON IMMAGINI ---
     
-    // Hint freccia sinistra
-    tavole_hint_left = PP.shapes.text_styled_add(s,
-        80, 400,
-        "<",
-        60,
-        "Georgia",
-        "bold",
-        "0x000000",
-        null,
-        0.5, 0.5
-    );
+    // Hint freccia sinistra (immagine)
+    tavole_hint_left = PP.assets.image.add(s, img_freccia_sx, 100, 380, 0.5, 0.5);
     
-    // Hint freccia destra
-    tavole_hint_right = PP.shapes.text_styled_add(s,
-        1200, 400,
-        ">",
-        60,
-        "Georgia",
-        "bold",
-        "0x000000",
-        null,
-        0.5, 0.5
-    );
+    // Hint freccia destra (immagine)
+    tavole_hint_right = PP.assets.image.add(s, img_freccia_dx, 1180, 380, 0.5, 0.5);
     
-    // ESC con freccia in alto a destra
-    PP.shapes.text_styled_add(s,
-        1200, 50,
-        "← ESC",
-        28,
-        "Georgia",
-        "bold",
-        "0x6B2D8C",
-        null,
-        0.5, 0.5
-    );
+    // --- ZONE CLICKABILI FRECCE (Invisibili) ---
+    // Rettangolo sopra la freccia sinistra
+    zone_sx = PP.shapes.rectangle_add(s, 80, 400, 100, 100, "0x00FF00", 0);
+    PP.layers.set_z_index(zone_sx, 101);
+    
+    // Rettangolo sopra la freccia destra
+    zone_dx = PP.shapes.rectangle_add(s, 1200, 400, 100, 100, "0x00FF00", 0);
+    PP.layers.set_z_index(zone_dx, 101);
+
+    // EVENTI CLICK
+    PP.interactive.mouse.add(zone_sx, "pointerdown", function() {
+        if (!is_animating && tavole_current > 0) {
+            go_prev(s);
+        }
+    });
+
+    PP.interactive.mouse.add(zone_dx, "pointerdown", function() {
+        if (!is_animating && tavole_current < 2) {
+            go_next(s);
+        }
+    });
+
+    
+    // --- NUOVO MENU PRINCIPALE (SOVRAPPOSIZIONE) ---
+    let menu_overlay = PP.assets.image.add(s, img_menu_princ, 640, 360, 0.5, 0.5);
+    PP.layers.set_z_index(menu_overlay, 100);
+
+    // --- BOTTONE INVISIBILE PER TORNARE AL MENU ---
+    btn_home_zone = PP.shapes.rectangle_add(s, 238, 57, 408, 66, "0x00FF00", 0); 
+    PP.layers.set_z_index(btn_home_zone, 101); 
+    
+    PP.interactive.mouse.add(btn_home_zone, "pointerdown", function() {
+        PP.scenes.start("main_menu");
+    });
     
     tavole_key_was_pressed = true;
     update_ui_visibility();
@@ -114,7 +124,6 @@ function update(s) {
         tavole_key_was_pressed = false;
     }
     
-    // Se stiamo animando, ignoriamo gli input per non rompere la sequenza
     if (is_animating) return;
 
     if (!tavole_key_was_pressed) {
@@ -122,32 +131,16 @@ function update(s) {
         // --- NAVIGAZIONE INDIETRO (SINISTRA) ---
         if (left_pressed && tavole_current > 0) {
             tavole_key_was_pressed = true;
-            
-            if (tavole_current === 1) {
-                // Da 1 a 0
-                play_transition(s, "anim_1_to_0", "static_0", 0);
-            } 
-            else if (tavole_current === 2) {
-                // Da 2 a 1
-                play_transition(s, "anim_2_to_1", "static_1", 1);
-            }
+            go_prev(s);
         }
         
-        // --- NAVIGAZIONE AVANTI (DESTRA) ---
+        // NAVIGAZIONE AVANTI (DESTRA)
         if (right_pressed && tavole_current < 2) {
             tavole_key_was_pressed = true;
-            
-            if (tavole_current === 0) {
-                // Da 0 a 1
-                play_transition(s, "anim_0_to_1", "static_1", 1);
-            } 
-            else if (tavole_current === 1) {
-                // Da 1 a 2
-                play_transition(s, "anim_1_to_2", "static_2", 2);
-            }
+            go_next(s);
         }
         
-        // --- ESCI ---
+        // ESCI
         if (esc_pressed) {
             tavole_key_was_pressed = true;
             PP.scenes.start("main_menu");
@@ -155,27 +148,34 @@ function update(s) {
     }
 }
 
+// Funzioni helper per la logica di navigazione (condivise tra tastiera e mouse)
+function go_prev(s) {
+    if (tavole_current === 1) {
+        play_transition(s, "anim_1_to_0", "static_0", 0);
+    } else if (tavole_current === 2) {
+        play_transition(s, "anim_2_to_1", "static_1", 1);
+    }
+}
+
+function go_next(s) {
+    if (tavole_current === 0) {
+        play_transition(s, "anim_0_to_1", "static_1", 1);
+    } else if (tavole_current === 1) {
+        play_transition(s, "anim_1_to_2", "static_2", 2);
+    }
+}
+
 // Funzione helper per gestire animazione -> stop
 function play_transition(s, anim_key, static_key_after, new_index) {
-    is_animating = true; // Blocca input
-    
-    // Nascondi frecce durante l'animazione per pulizia visiva
-    tavole_hint_left.visibility.alpha = 0;
-    tavole_hint_right.visibility.alpha = 0;
+    is_animating = true; 
     
     PP.assets.sprite.animation_play(tavole_sprite, anim_key);
     
-    // Calcoliamo la durata: 6 frame a 12 fps = 500ms
     PP.timers.add_timer(s, 500, function() {
-        // Animazione finita
         is_animating = false;
         tavole_current = new_index;
         
-        // Imposta il frame statico finale per sicurezza
         PP.assets.sprite.animation_play(tavole_sprite, static_key_after);
-        
-        // Aggiorna testi e frecce
-        PP.shapes.text_change(tavole_counter, (tavole_current + 1) + " / 3");
         update_ui_visibility();
         
     }, false);
@@ -185,12 +185,21 @@ function update_ui_visibility() {
     if (tavole_current === 0) {
         tavole_hint_left.visibility.alpha = 0.3; // Disabilitata
         tavole_hint_right.visibility.alpha = 1;
+        // Disabilitiamo interazione mouse se la freccia è grigia
+        if(zone_sx && zone_sx.input) zone_sx.input.enabled = false;
+        if(zone_dx && zone_dx.input) zone_dx.input.enabled = true;
+
     } else if (tavole_current === 1) {
         tavole_hint_left.visibility.alpha = 1;
         tavole_hint_right.visibility.alpha = 1;
+        if(zone_sx && zone_sx.input) zone_sx.input.enabled = true;
+        if(zone_dx && zone_dx.input) zone_dx.input.enabled = true;
+
     } else { // 2
         tavole_hint_left.visibility.alpha = 1;
         tavole_hint_right.visibility.alpha = 0.3; // Disabilitata
+        if(zone_sx && zone_sx.input) zone_sx.input.enabled = true;
+        if(zone_dx && zone_dx.input) zone_dx.input.enabled = false;
     }
 }
 

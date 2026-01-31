@@ -29,6 +29,7 @@ let img_fine_tubo1;
 let img_lvl1map_pt1, img_lvl1map_pt2, img_lvl2map1_pt1, img_lvl2map2_pt1, img_lvl2map3_pt1, img_lvl2map_pt2, img_lvl3map;
 
 let img_sfondolvl1, img_primo_piano1, img_primo_pianolvl2_2;
+let img_colonne;
 
 let img_overlay_tree;
 let img_ladder;
@@ -159,6 +160,7 @@ function preload_platforms(s) {
 
     img_sfondolvl1 = PP.assets.image.load(s, "assets/images/sfondi/sfondolvl1.png")
     img_primo_piano1 = PP.assets.image.load(s, "assets/images/primo_piano1.png")
+    img_colonne = PP.assets.image.load(s, "assets/images/colonne.png")
 
     img_overlay_tree = PP.assets.image.load(s, "assets/images/overlaytree.png");
 
@@ -804,6 +806,8 @@ function create_platforms_lvl2_pt2(s, player) {
 
 
 function create_platforms_lvl3(s, player) {
+    let colonne = PP.assets.image.add(s, img_colonne, -1970, 977, 0, 1);
+
     let platform1 = PP.assets.image.add(s, img_platform8, 1200, 400, 0, 1);
     let platform2 = PP.assets.image.add(s, img_platform20, 1800, 580, 0, 1);
     let blocco1 = PP.assets.image.add(s, img_blocco15, 3200, 1380, 0, 1);
@@ -846,13 +850,13 @@ function create_platforms_lvl3(s, player) {
     let piattaforma_suprema1 = PP.assets.image.add(s, img_piattaforma_suprema1, 300, -5700, 0, 1)
     let piattaforma_suprema2 = PP.assets.image.add(s, img_piattaforma_suprema2, 700, -5980, 0, 1)
 
-
     let ladder1 = PP.assets.image.add(s, img_ladder, 3700, 210, 0, 1);
 
     let mappa7 = PP.assets.image.add(s, img_lvl3map, -1970, 1380, 0, 1);
 
     PP.layers.set_z_index(mappa7, 10);
     PP.layers.set_z_index(player, 30);
+    PP.layers.set_z_index(colonne, 40);
 
 
     PP.physics.add(s, platform1, PP.physics.type.STATIC);
@@ -991,3 +995,12 @@ function create_platforms_lvl3(s, player) {
 function update_platforms(s) {
 
 }
+
+
+// RENDIAMO GLOBALI LE FUNZIONI PER I MODULI
+window.preload_platforms = preload_platforms;
+window.create_platforms_lvl1_pt1 = create_platforms_lvl1_pt1;
+window.create_platforms_lvl1_pt2 = create_platforms_lvl1_pt2;
+if (typeof create_platforms_lvl2_pt1 !== 'undefined') window.create_platforms_lvl2_pt1 = create_platforms_lvl2_pt1;
+if (typeof create_platforms_lvl2_pt2 !== 'undefined') window.create_platforms_lvl2_pt2 = create_platforms_lvl2_pt2;
+if (typeof create_platforms_lvl3 !== 'undefined') window.create_platforms_lvl3 = create_platforms_lvl3;

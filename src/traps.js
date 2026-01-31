@@ -152,3 +152,7 @@ function update_cuore_graphic(player) {
         if (player.hp == 1) PP.assets.sprite.animation_play(player.cuore, "hp_1");
     }
 }
+
+
+// RENDIAMO GLOBALI LE FUNZIONI PER I MODULI
+window.create_spruzzo_trap = create_spruzzo_trap;

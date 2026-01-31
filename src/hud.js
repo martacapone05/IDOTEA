@@ -9,6 +9,9 @@ let img_boccetta_pickup;
 let hud_heart_positions = [];
 let hud_active_hearts = [];
 
+// Variabile per il bottone info invisibile
+let btn_info_zone;
+
 function preload_hud(s) {
     // 1. Carichiamo gli asset per l'HUD (Interfaccia)
     hud_cuore_anim = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_cuore.png", 1280, 720);
@@ -25,12 +28,14 @@ function create_hud(s, player) {
     hud_active_hearts = [];
 
     // --- RECUPERO DATI SALVATI ---
+    // Recupera HP (che game_over ha resettato a 4)
     let saved_hp = PP.game_state.get_variable("player_hp");
     if (saved_hp === undefined || saved_hp === null) {
         saved_hp = 4;
         PP.game_state.set_variable("player_hp", 4);
     }
     
+    // Recupera Frammenti (che sono rimasti invariati)
     let saved_fragments = PP.game_state.get_variable("player_fragments");
     if (saved_fragments === undefined || saved_fragments === null) {
         saved_fragments = 0;
@@ -41,7 +46,7 @@ function create_hud(s, player) {
     player.hp = saved_hp;
     player.frammenti = saved_fragments;
 
-    // 2. Setup Grafica Cuore (HUD fisso sullo schermo - Z 10000)
+    // 2. Setup Grafica Cuore
     let cuore = PP.assets.sprite.add(s, hud_cuore_anim, 0, 0, 0, 0);
     cuore.tile_geometry.scroll_factor_x = 0;
     cuore.tile_geometry.scroll_factor_y = 0;
@@ -55,7 +60,7 @@ function create_hud(s, player) {
     player.cuore = cuore;
     update_cuore_graphic(player);
 
-    // 3. Setup Grafica Boccetta (HUD fisso sullo schermo - Z 10000)
+    // 3. Setup Grafica Boccetta
     let boccetta = PP.assets.sprite.add(s, hud_boccetta_anim, 0, 0, 0, 0);
     boccetta.tile_geometry.scroll_factor_x = 0;
     boccetta.tile_geometry.scroll_factor_y = 0;
@@ -70,28 +75,58 @@ function create_hud(s, player) {
     player.boccetta = boccetta;
     update_boccetta_graphic(player);
 
+    // 4. BOTTONE INFO (Per andare ai comandi)
+    btn_info_zone = PP.shapes.rectangle_add(s, 1237, 47, 53, 62, "0x00FF00", 0); // Invisibile (alpha 0)
+    btn_info_zone.tile_geometry.scroll_factor_x = 0;
+    btn_info_zone.tile_geometry.scroll_factor_y = 0;
+    PP.layers.set_z_index(btn_info_zone, 10001); 
+
+    // --- INTERAZIONE MOUSE ---
+    PP.interactive.mouse.add(btn_info_zone, "pointerdown", function() {
+        console.log("Salvo posizione e apro comandi...");
+        
+        // SALVA LE COORDINATE ATTUALI DEL PLAYER
+        PP.game_state.set_variable("pausa_x", player.geometry.x);
+        PP.game_state.set_variable("pausa_y", player.geometry.y);
+        
+        PP.scenes.start("comandi");
+    });
+
+    // --- INTERAZIONE TASTIERA (ESC) USA SOLO POLIPHASER ---
+    // Creiamo un loop con un timer che controlla se ESC è premuto
+    let gestisci_input_hud = function() {
+        
+        // Controlla se il tasto ESC è giù
+        if (PP.interactive.kb.is_key_down(s, PP.key_codes.ESC)) {
+            console.log("ESC premuto: Salvo posizione e apro comandi...");
+            PP.game_state.set_variable("pausa_x", player.geometry.x);
+            PP.game_state.set_variable("pausa_y", player.geometry.y);
+            PP.scenes.start("comandi");
+        } 
+        else {
+            // Se non è premuto, ricontrolla tra 20ms (loop infinito)
+            // false = non ripete automaticamente, lo richiamiamo noi
+            PP.timers.add_timer(s, 20, gestisci_input_hud, false);
+        }
+    };
+    
+    // Avvia il loop di controllo
+    gestisci_input_hud();
+
+
     // Salviamo la funzione di respawn nel player
     player.respawn_hearts_func = function() {
         respawn_hearts(s, player);
     };
 }
 
-// --- FUNZIONI LOGICHE ---
+// --- FUNZIONI DI SUPPORTO ---
 
 function create_collectible_fragment(s, x, y, player) {
-    // MODIFICA: Uso l'immagine invece del rettangolo
-    // 0.5, 0.5 serve per centrare l'immagine sul punto x, y
     let frammento = PP.assets.image.add(s, img_boccetta_pickup, x, y, 0.5, 0.5);
-    
-    // --- Z-INDEX IMPOSTATO A 30 ---
     PP.layers.set_z_index(frammento, 30);
-    // ------------------------------
-
     PP.physics.add(s, frammento, PP.physics.type.STATIC);
     
-    // Se necessario, aggiusta la collision box se l'immagine è troppo grande
-    // PP.physics.set_collision_rectangle(frammento, 30, 30); 
-
     PP.physics.add_overlap_f(s, player, frammento, function(s, player_obj, fragment_obj) {
         collect_fragment(s, player_obj, fragment_obj);
     });
@@ -102,10 +137,7 @@ function collect_fragment(s, player, frammento_obj) {
     if (player.frammenti < 4) {
         player.frammenti = player.frammenti + 1;
         PP.game_state.set_variable("player_fragments", player.frammenti);
-        console.log("Frammento raccolto! Totale: " + player.frammenti);
         update_boccetta_graphic(player);
-    } else {
-        console.log("Boccetta già piena!");
     }
 }
 
@@ -124,13 +156,8 @@ function create_collectible_heart(s, x, y, player, is_respawn) {
         hud_heart_positions.push({x: x, y: y});
     }
 
-    // MODIFICA: Uso l'immagine invece del rettangolo
-    // 0.5, 0.5 serve per centrare l'immagine sul punto x, y
     let heart_pickup = PP.assets.image.add(s, img_cuore_pickup, x, y, 0.5, 0.5);
-    
-    // --- Z-INDEX IMPOSTATO A 30 ---
     PP.layers.set_z_index(heart_pickup, 30);
-    // ------------------------------
 
     PP.physics.add(s, heart_pickup, PP.physics.type.STATIC);
     hud_active_hearts.push(heart_pickup);
@@ -155,7 +182,6 @@ function collect_heart(s, player, heart_obj) {
 }
 
 function respawn_hearts(s, player) {
-    console.log("Respawn dei cuori...");
     for (let i = 0; i < hud_active_hearts.length; i++) {
         if (hud_active_hearts[i]) {
             PP.assets.destroy(hud_active_hearts[i]);
@@ -177,3 +203,12 @@ function update_cuore_graphic(player) {
     }
     PP.game_state.set_variable("player_hp", player.hp);
 }
+
+// RENDIAMO GLOBALI LE FUNZIONI PER I MODULI
+window.preload_hud = preload_hud;
+window.create_hud = create_hud;
+window.create_collectible_fragment = create_collectible_fragment;
+window.create_collectible_heart = create_collectible_heart;
+window.respawn_hearts = respawn_hearts;
+window.update_cuore_graphic = update_cuore_graphic;
+window.update_boccetta_graphic = update_boccetta_graphic;

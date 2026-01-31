@@ -12,7 +12,8 @@ let img_waterfall_off;
 let img_waterfall_on;  
 let waterfall_segments = []; 
 let img_insegna_vertical;
-let img_condizionatore; 
+let img_condizionatore;
+let img_condizionatore2; 
 let img_vending_machine;
 let img_cat;
 let img_sgabelli;
@@ -90,6 +91,9 @@ function preload(s) {
 
     img_insegna_vertical = PP.assets.sprite.load_spritesheet(s, "assets/images/insegna_vertical.png", 173, 225);
     img_condizionatore = PP.assets.sprite.load_spritesheet(s, "assets/images/condizionatore1.png", 132, 102);
+    // CARICAMENTO CONDIZIONATORE 2
+    img_condizionatore2 = PP.assets.sprite.load_spritesheet(s, "assets/images/condizionatore2.png", 172, 134);
+
     img_vending_machine = PP.assets.sprite.load_spritesheet(s, "assets/images/vending_machine.png", 180, 365);
     img_cat = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_cat.png", 150, 150);
     img_sgabelli = PP.assets.image.load(s, "assets/images/sgabelli.png");
@@ -141,7 +145,7 @@ function create(s) {
     PP.layers.set_z_index(ladder_exit, 20);
     PP.physics.add(s, ladder_exit, PP.physics.type.STATIC);
 
-    // *** CASCATA ORIGINALE (VISIVA) - QUELLA CHE DEVE SPARIRE ***
+    // *** CASCATA ORIGINALE (VISIVA) ***
     let wf_x = 3984;
     let wf_y_start = -2844; 
     let wf_y_end = -1711;
@@ -211,7 +215,7 @@ function create(s) {
     PP.assets.sprite.animation_play(insegna, "play_insegna");
     PP.layers.set_z_index(insegna, 20);
 
-    // CONDIZIONATORI
+    // CONDIZIONATORI TIPO 1
     let posizioni_condizionatori = [
         {x: -12, y: 277},
         {x: 2858, y: -352},
@@ -231,15 +235,34 @@ function create(s) {
         cond_anim_counter++;
     });
 
+    // NUOVI CONDIZIONATORI 2
+    let pos_cond2 = [
+        {x: -112, y: 1017},
+        {x: 434, y: -3226},
+        {x: 3454, y: -3620},
+        {x: 4136, y: -4275},
+        {x: 4357, y: -2199}
+    ];
+
+    for (let i = 0; i < pos_cond2.length; i++) {
+        let pos = pos_cond2[i];
+        
+        let cond2 = PP.assets.sprite.add(s, img_condizionatore2, pos.x, pos.y, 0, 1);
+        
+        let anim_name = "spin2_" + i; 
+        
+        PP.assets.sprite.animation_add(cond2, anim_name, 0, 4, 10, -1);
+        PP.assets.sprite.animation_play(cond2, anim_name);
+        PP.layers.set_z_index(cond2, 20);
+    }
+
     // VENDING MACHINE
     let vm = PP.assets.sprite.add(s, img_vending_machine, 5117, -1984, 0, 1);
     PP.assets.sprite.animation_add(vm, "blink_vm", 0, 4, 10, -1);
     PP.assets.sprite.animation_play(vm, "blink_vm");
     PP.layers.set_z_index(vm, 20);
 
-    // ===============================================
-    // *** NPC GATTO (Ora Interagibile) ***
-    // ===============================================
+    // NPC GATTO
     let cat = PP.assets.sprite.add(s, img_cat, 4209, -2103, 0, 1);
     PP.assets.sprite.animation_add(cat, "idle_cat", 0, 5, 10, -1);
     PP.assets.sprite.animation_play(cat, "idle_cat");
@@ -249,13 +272,12 @@ function create(s) {
     // REGISTRAZIONE GATTO CON FASE 1
     register_npc(cat, "Gatto", dialoghi_gatto_fase1);
     cat_npc_ref = cat; 
-    // ===============================================
 
     let sgabelli = PP.assets.image.add(s, img_sgabelli, 4203, -2045, 0, 1);
     PP.layers.set_z_index(sgabelli, 21);
 
 
-// *** GESTIONE PUNTO DI PARTENZA ***
+    // GESTIONE PUNTO DI PARTENZA
     let start_x = -100;
     let start_y = 600;
 
@@ -279,14 +301,21 @@ function create(s) {
         start_y = 1300;
         PP.game_state.set_variable("punto_di_partenza", "inizio");
     }
+    // RIPRESA DALLA PAUSA (Nuovo blocco)
+    else if (punto == "resume_pause") {
+        console.log("Riprendo dalla pausa...");
+        start_x = PP.game_state.get_variable("pausa_x");
+        start_y = PP.game_state.get_variable("pausa_y");
+        PP.game_state.set_variable("punto_di_partenza", "inizio");
+    }
     // Fallback per compatibilità (spawn default)
     else {
         start_x = -100;
         start_y = 600;
     }
+    
 
-    // *** CREAZIONE PLAYER ***
-    // ===============================================
+    // CREAZIONE PLAYER
     player = PP.assets.sprite.add(s, img_player, start_x, start_y, 0.5, 1);
     PP.physics.add(s, player, PP.physics.type.DYNAMIC);
     PP.physics.set_collision_rectangle(player, 138, 230, 20, 64);
@@ -300,13 +329,11 @@ function create(s) {
     create_platforms_lvl1_pt2(s, player);
 
     // ===============================================
-    // *** LOGICA SCALA (SPOSTATA DOPO IL PLAYER) ***
+    // *** LOGICA SCALA ***
     // ===============================================
     PP.physics.add_overlap_f(s, player, ladder_exit, function(scene, p, l) {
         
-        // <<< MODIFICA RICHIESTA: ABILITA ARRAMPICATA >>>
         p.can_climb = true; 
-        // ------------------------------------------
 
         // Se preme E torna indietro
         if (PP.interactive.kb.is_key_down(scene, PP.key_codes.E)) {
@@ -377,7 +404,6 @@ function create(s) {
 
     // HUD
     create_hud(s, player);
-    create_pause_button(s, player);
 
     // COLLEZIONABILI
     create_collectible_fragment(s, 5750, -120, player);
@@ -396,7 +422,7 @@ function create(s) {
     });
 
     // CAMERA
-    PP.camera.start_follow(s, player, 0, -40);
+    PP.camera.start_follow(s, player, 0, 100);
 
 
     let barrier_left = PP.shapes.rectangle_add(s, -1282, -1875, 100, 6500, "0x000000", 0);
@@ -428,13 +454,6 @@ function update(s) {
     // CAMERA BOUNDS
     PP.camera.set_bounds(s, -1232, -5125, 10000, 6500);
 
-    // 0. GESTIONE MENU PAUSA
-    manage_pause_input(s);
-    if (is_game_paused()) {
-        PP.physics.set_velocity_x(player, 0);
-        PP.physics.set_velocity_y(player, 0);
-        return;
-    }
 
     // 1. GESTIONE INPUT DIALOGHI
     manage_npc_interaction(s, player);
@@ -520,30 +539,36 @@ function update(s) {
 
     player.cam_offset_x += (player.cam_target_x - player.cam_offset_x) * 0.03;
 
-    // LOGICA CAMERA Y
-
+    // LOGICA CAMERA Y (CORRETTA)
     if (player.geometry.x > 2000 && player.geometry.x < 5700 &&
         player.geometry.y < -1700 && player.geometry.y > -2500) {
         player.cam_target_y = 200;
     }
     else if (player.geometry.x > 4900 && player.geometry.x < 5690 &&
     player.geometry.y < 200 && player.geometry.y > -600) {
-    player.cam_target_y = -40;
+        player.cam_target_y = -40;
     }
     else if (player.geometry.x > 2000 && player.geometry.x < 5700 &&
     player.geometry.y < -3550 && player.geometry.y > -4200) {
-    player.cam_target_y = -40;
+        player.cam_target_y = -40;
+    }
+    else if (player.geometry.x < 2000) {
+        player.cam_target_y = 120;
     }
     else if (player.geometry.x > 5870 && player.geometry.x < 6400 &&
     player.geometry.y < -4150 && player.geometry.y > -3700) {
-    player.cam_target_y = -40;
+        player.cam_target_y = -40;
     }
     else if (player.geometry.x > 2000 && player.geometry.x < 5700 &&
     player.geometry.y < -3550 && player.geometry.y > -4200) {
-    player.cam_target_y = -40;
+        player.cam_target_y = -40;
     }
     else if (player.geometry.x > 6400 && player.geometry.x < 8500) {
         player.cam_target_y = 200;
+    } 
+    // ELSE FONDAMENTALE PER RESETTARE LA CAMERA
+    else {
+        player.cam_target_y = -40;
     }
 
     player.cam_offset_y += (player.cam_target_y - player.cam_offset_y) * 0.02;
@@ -749,9 +774,21 @@ function is_dialogue_active() {
 function safe_destroy(obj) {
     if (!obj) return;
     
-    // Usa il metodo corretto di PoliPhaser per distruggere asset
-    if (obj.ph_obj) {
-        PP.assets.destroy(obj);
+    // Prova 1: Metodo destroy diretto
+    if (typeof obj.destroy === 'function') {
+        obj.destroy();
+        return;
+    }
+    
+    // Prova 2: Oggetto Phaser interno
+    if (obj.ph_obj && typeof obj.ph_obj.destroy === 'function') {
+        obj.ph_obj.destroy();
+        return;
+    }
+    
+    // Prova 3: Se è uno sprite interno
+    if (obj.sprite && typeof obj.sprite.destroy === 'function') {
+        obj.sprite.destroy();
         return;
     }
 

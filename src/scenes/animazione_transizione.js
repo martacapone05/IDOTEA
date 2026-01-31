@@ -11,7 +11,6 @@ function create(s) {
     transizione_sprite.tile_geometry.scroll_factor_x = 0;
     transizione_sprite.tile_geometry.scroll_factor_y = 0;
 
-    // 12 fps?
     PP.assets.sprite.animation_add(transizione_sprite, "play_anim", 0, 59, 12, 0);
     
     PP.assets.sprite.animation_play(transizione_sprite, "play_anim");

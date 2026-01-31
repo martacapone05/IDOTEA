@@ -10,14 +10,18 @@ function preload_player(s) {
     img_player = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_player.png", 185, 294);
 }
 
+// *** QUESTA E' LA FUNZIONE CHE MANCAVA E CAUSAVA L'ERRORE ***
+function create_player(s) {
+    // Funzione vuota di sicurezza per evitare errori
+}
+// ************************************************************
+
 function configure_player_animations(s, player) {
     PP.assets.sprite.animation_add(player, "run", 0, 7, 9, -1);         
     PP.assets.sprite.animation_add(player, "jump_up", 10, 12, 8, 0);
     PP.assets.sprite.animation_add_list(player, "jump_down", [14, 13, 15, 16, 17, 18], 8, 0);
     
     // MODIFICA 2: Definizione dell'animazione IDLE
-    // Sostituisci 0 e 3 con i tuoi frame di inizio e fine per l'idle.
-    // Il parametro -1 alla fine significa "loop infinito" (continua a ripetersi)
     PP.assets.sprite.animation_add_list(player, "idle", [24, 25, 26, 25], 4, -1);
     
     PP.assets.sprite.animation_add(player, "climb", 27, 33, 8, -1);
@@ -167,3 +171,9 @@ function manage_player_update(s, player) {
     player.is_on_platform = false; 
     player.is_head_blocked = false;
 }
+
+// RENDIAMO GLOBALI LE FUNZIONI PER I MODULI
+window.preload_player = preload_player;
+window.create_player = create_player;
+window.configure_player_animations = configure_player_animations;
+window.manage_player_update = manage_player_update;

@@ -100,7 +100,7 @@ function preload(s) {
 
 function create(s) {
 
-    // Checkpoint: salva questo livello come punto di respawn
+    // Checkpoint
     PP.game_state.set_variable("last_scene", "lvl2_pt1");
 
     reset_npcs();
@@ -126,21 +126,19 @@ function create(s) {
     background3.visibility.alpha = 0.4; 
 
 
-    // ======================================================
-    // *** 3. CREAZIONE CASCATE ***
-    // ======================================================
+    // CREAZIONE CASCATE
     create_waterfalls(s);
 
-    // ======================================================
-    // *** 4. CREAZIONE PLAYER ***
-    // ======================================================
-    
+    // CREAZIONE PLAYER
+    create_player(s);
+
+    // GESTIONE PUNTO DI PARTENZA
     let start_x = -373; 
     let start_y = 500;
 
     let punto = PP.game_state.get_variable("punto_di_partenza");
 
-    // Arrivo dalla funivia (da lvl1_pt2 -> animazione_transizione -> lvl2_pt1)
+    // Arrivo dalla funivia
     if (punto == "funivia_arrivo") {
         start_x = -373; 
         start_y = 500;
@@ -148,10 +146,19 @@ function create(s) {
     }
     // Ritorno da lvl2_pt2 (backtracking)
     else if (punto == "fine") {
-        start_x = 15800; 
-        start_y = -1100;
+        // --- MODIFICATO QUI: PIU' A SINISTRA ---
+        start_x = 15700; // Era 15800
+        start_y = -1340;
         PP.game_state.set_variable("punto_di_partenza", "inizio");
     }
+    // Ripresa dalla PAUSA (comandi)
+    else if (punto == "resume_pause") {
+        console.log("Riprendo dalla pausa...");
+        start_x = PP.game_state.get_variable("pausa_x");
+        start_y = PP.game_state.get_variable("pausa_y");
+        PP.game_state.set_variable("punto_di_partenza", "inizio");
+    }
+
 
     player = PP.assets.sprite.add(s, img_player, start_x, start_y, 0.5, 1);
     PP.physics.add(s, player, PP.physics.type.DYNAMIC); 
@@ -241,7 +248,6 @@ function create(s) {
     // *** 10. HUD E CAMERA ***
     // ===============================================
     create_hud(s, player); 
-    create_pause_button(s, player);
     create_collectible_fragment(s, 1200, 470, player);
     create_collectible_heart(s, 1700, 470, player);
 
@@ -255,6 +261,7 @@ function create(s) {
         }
     });
 
+    // Inizializza camera
     PP.camera.start_follow(s, player, 0, 120);
     
     // BARRIERE
@@ -268,6 +275,11 @@ function create(s) {
 
     player.cam_offset_x = 0;
     player.cam_target_x = 0;
+    
+    // INIZIALIZZIAMO ANCHE LA Y, così l'interpolazione funziona bene
+    player.cam_offset_y = 120;
+    player.cam_target_y = 120;
+
     PP.camera.set_deadzone(s, 10, 50);
 
     player.can_climb = false;
@@ -282,17 +294,8 @@ function create(s) {
 
 function update(s) {
     // CAMERA BOUNDS
-    PP.camera.set_bounds(s, -1300, -2550, 17621, 6000);
-
-    // 0. GESTIONE MENU PAUSA
-    manage_pause_input(s);
-    if (is_game_paused()) {
-        PP.physics.set_velocity_x(player, 0);
-        PP.physics.set_velocity_y(player, 0);
-        return;
-    }
+    PP.camera.set_bounds(s, -1300, -2550, 17620, 6000);
     
-    // RESET FLAG custom
     // GESTIONE DIALOGHI (TASTO E)
     manage_npc_interaction(s, player);
 
@@ -340,17 +343,31 @@ function update(s) {
         manage_player_update(s, player);
     }
 
+    // ===============================================
+    // *** LOGICA CAMERA CORRETTA ***
+    // ===============================================
+
+    // 1. Calcolo offset X (Guardare avanti)
     let vel_x = PP.physics.get_velocity_x(player);
-    if (vel_x > 50) player.cam_target_x = -200;      
-    else if (vel_x < -50) player.cam_target_x = 200; 
-    else player.cam_target_x = 0;                    
+    if (vel_x > 50) player.cam_target_x = -200;      // Guarda a destra (Player a sinistra)
+    else if (vel_x < -50) player.cam_target_x = 200; // Guarda a sinistra (Player a destra)
+    else player.cam_target_x = 0;                    // Centrato
 
     player.cam_offset_x += (player.cam_target_x - player.cam_offset_x) * 0.03;
 
+    // 2. Calcolo offset Y (Guardare sopra/sotto in certe zone)
     if (player.geometry.x > 7500) {
-        player.cam_target_y = -20
-    } else (player.cam_target_y = 120)
+        player.cam_target_y = -20;
+    } else {
+        player.cam_target_y = 120;
+    }
 
+    player.cam_offset_y += (player.cam_target_y - player.cam_offset_y) * 0.03;
+
+    // 3. APPLICAZIONE OFFSET ALLA CAMERA (Questa riga mancava!)
+    PP.camera.set_follow_offset(s, player.cam_offset_x, player.cam_offset_y);
+
+    // ===============================================
     
     let scroll_x = PP.camera.get_scroll_x(s);
     background1.tile_geometry.x = scroll_x * 0.1;
@@ -373,7 +390,8 @@ function update(s) {
         respawn_hearts(s, player);
     }
 
-    if (player.geometry.x > 15930) {
+    // --- MODIFICATO QUI: TRIGGER PIU' A DESTRA ---
+    if (player.geometry.x > 16300) { // Era 15930
         PP.game_state.set_variable("punto_di_partenza", "avanti_da_pt1");
         PP.scenes.start("lvl2_pt2");
     }
@@ -537,21 +555,26 @@ function safe_destroy(obj) {
     if (obj.geometry) obj.geometry.y = 10000;
 }
 
+
 function create_waterfalls(s) {
     
-    // Funzione helper per colonne Waterfall 1 e 2
-    let create_column = function(image, anim, x, start_y, limit_y, h) {
+    // Funzione helper modificata per accettare z_index personalizzato
+    // Se z_index non viene passato, usa 26 come default
+    let create_column = function(image, anim, x, start_y, limit_y, h, custom_z) {
+        
+        let z_index = (custom_z !== undefined) ? custom_z : 26; // Default 26
+
         let current_y = start_y;
         while(current_y < limit_y) {
             let w = PP.assets.sprite.add(s, image, x, current_y, 0, 1);
             PP.assets.sprite.animation_add(w, anim, 0, 9, 10, -1);
             PP.assets.sprite.animation_play(w, anim);
-            PP.layers.set_z_index(w, 26); 
+            PP.layers.set_z_index(w, z_index); // Usa lo z-index dinamico
             current_y += h - 15;
         }
     };
 
-    // Cascate standard (1 e 2)
+    // Cascate standard (Z-index 26 di default)
     create_column(img_waterfall1, "flow1", 1376, 622, 1030, 211);
     create_column(img_waterfall1, "flow1", 4378, -1023, 1030, 211);
     create_column(img_waterfall2, "flow2", 2492, 255, 1030, 210);
@@ -562,28 +585,12 @@ function create_waterfalls(s) {
     create_column(img_waterfall2, "flow2", 5889, -444, 1030, 210);
     create_column(img_waterfall2, "flow2", 5796, -1005, 1030, 210);
 
-    // ------------------------------------------------------
-    // *** GESTIONE WATERFALL 5 (3 CASCATE SINGOLE) ***
-    // ------------------------------------------------------
-    
-    // Funzione helper per aggiungere una singola cascata con la sua schiuma
-    let add_single_wf5 = function(x, y) {
-        // Aggiunge la Cascata
-        let wf = PP.assets.sprite.add(s, img_waterfall5, x, y, 0, 1);
-        PP.assets.sprite.animation_add(wf, "flow5", 0, 9, 10, -1);
-        PP.assets.sprite.animation_play(wf, "flow5");
-        PP.layers.set_z_index(wf, 7);
+    // --- LE TUE NUOVE COLONNE CON Z-INDEX 8 ---
+    // Passiamo 8 come ultimo argomento
+    create_column(img_waterfall5, "flow5", 13493, -888, 1030, 210, 8);
+    create_column(img_waterfall5, "flow5", 13678, -888, 1030, 210, 8);
+    create_column(img_waterfall5, "flow5", 13862, -888, 1030, 210, 8);
 
-        // Aggiunge la schiuma alla base dello sprite cascata
-        let schiuma = PP.assets.sprite.add(s, img_schiuma5, x - 19, y + 7, 0, 1);
-        PP.assets.sprite.animation_add(schiuma, "foam5", 0, 9, 10, -1);
-        PP.assets.sprite.animation_play(schiuma, "foam5");
-        PP.layers.set_z_index(schiuma, 8);
-    };
-
-    add_single_wf5(13494, -882);
-    add_single_wf5(13678, -882);
-    add_single_wf5(13862, -882);
 }
 
 function destroy(s) {
