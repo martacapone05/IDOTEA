@@ -212,6 +212,7 @@ function create(s) {
     let start_x = -1400
     let start_y = 590
 
+
     if (PP.game_state.get_variable("punto_di_partenza") == "fine") {
         start_x = -1400; 
         start_y = 600;
@@ -563,7 +564,7 @@ function open_dialogue_popup(s, npc) {
     dialogue_popup.tile_geometry.scroll_factor_x = 0;
     dialogue_popup.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_popup, 10001);
-    dialogue_speaker = PP.shapes.text_styled_add(s, 260, 32, "", 22, "Luminari", "bold", "0xa430b3", null, 0, 0);
+    dialogue_speaker = PP.shapes.text_styled_add(s, 260, 32, "", 22, "Luminari", "bold", "0x9f51bf", null, 0, 0);
     dialogue_speaker.tile_geometry.scroll_factor_x = 0;
     dialogue_speaker.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_speaker, 10005);

@@ -52,7 +52,7 @@ let dialogue_popup = null;
 let dialogue_text = null;
 let dialogue_speaker = null;
 let action_key_was_pressed = false; 
-const NPC_INTERACTION_RANGE = 200; 
+const NPC_INTERACTION_RANGE = 300;
 
 // VARIABILI LOGICA LIVELLO
 let has_spoken_to_pecora = false;
@@ -252,6 +252,7 @@ function create(s) {
     PP.layers.set_z_index(pecora, 25);
 
     register_npc(pecora, "Pecora", dialoghi_pecora_fase1);
+    pecora.interaction_range = 300
 
     let btn_e_pecora = PP.assets.image.add(s, img_button_e, 12899, -1275, 0, 0); 
     PP.layers.set_z_index(btn_e_pecora, 30);
@@ -429,9 +430,12 @@ function reset_npcs() {
 }
 
 function is_player_near_npc(player, npc) {
-    let dist = Math.abs(player.geometry.x - npc.geometry.x);
+    let player_center_x = player.geometry.x + 92;
+    let npc_center_x = npc.geometry.x + 125;
+    let dist = Math.abs(player_center_x - npc_center_x);
     let height_diff = Math.abs(player.geometry.y - npc.geometry.y);
-    return dist < npc.interaction_range && height_diff < 200;
+    let range = npc.interaction_range || NPC_INTERACTION_RANGE;
+    return dist < npc.interaction_range && height_diff < 400;
 }
 
 function get_nearest_interactable_npc(player) {
@@ -472,7 +476,7 @@ function open_dialogue_popup(s, npc) {
     let text_padding_left = 260;  
     let text_padding_top = 32;   
 
-    dialogue_speaker = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top, "", 22, "Luminari", "bold", "0x01AA03", null, 0, 0);
+    dialogue_speaker = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top, "", 22, "Luminari", "bold", "0xe5919f", null, 0, 0);
     dialogue_speaker.tile_geometry.scroll_factor_x = 0;
     dialogue_speaker.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_speaker, 10002);
