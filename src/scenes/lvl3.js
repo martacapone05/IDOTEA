@@ -9,7 +9,7 @@ let img_avvoltoio;
 let img_dialogue_bg;
 // NUOVE IMMAGINI CASCATE
 let img_waterfall3;
-let img_waterfall1; // Variabile per la nuova cascata
+let img_waterfall1;
 let img_overlay_cascata;
 
 let background;
@@ -35,6 +35,9 @@ const NPC_INTERACTION_RANGE = 300;
 
 let has_spoken_to_avvoltoio = false;
 let is_player_attacking = false;
+
+// --- VARIABILI LOGICA DISTRUZIONE COLONNE ---
+let next_column_to_break = 2; // Si inizia obbligatoriamente dalla colonna 2
 
 // --- VARIABILI PER IL SALTO DELL'AVVOLTOIO ---
 let avvoltoio_flying = false;
@@ -80,11 +83,9 @@ function preload(s) {
     img_avvoltoio = PP.assets.sprite.load_spritesheet(s, "assets/images/sprite_avvoltoio.png", 746, 533);
     img_dialogue_bg = PP.assets.image.load(s, "assets/images/dialoghi/dialogo4.png");
     
-    // CARICAMENTO NUOVE CASCATE E OVERLAY
+    // CARICAMENTO CASCATE
     img_waterfall3 = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/waterfall3sprites.png", 57, 203);
-    // Caricamento Waterfall 1 (dimensioni standard 119x211)
     img_waterfall1 = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/waterfall1sprites.png", 119, 211);
-    
     img_overlay_cascata = PP.assets.image.load(s, "assets/images/overlay_cascata.png");
 
     preload_platforms(s);
@@ -104,6 +105,9 @@ function create(s) {
     avvoltoio_stage = 0; 
     level_completed = false;
     current_fly_height = 300;
+    
+    // Reset sequenza colonne
+    next_column_to_break = 2;
 
     // SFONDO
     background = PP.assets.tilesprite.add(s, img_background, 0, 0, 1280, 800, 0, 0);
@@ -112,7 +116,7 @@ function create(s) {
     PP.layers.set_z_index(background, -100);
 
     // ===============================================
-    // *** CASCATE TIPO 3 (Z-INDEX -5) ***
+    // *** CASCATE ***
     // ===============================================
     let create_wf3_column = function(x, y_start, y_end) {
         let h = 203; 
@@ -131,53 +135,39 @@ function create(s) {
         }
     };
 
-    create_wf3_column(-1081, -3147, -1200);
-    create_wf3_column(126, 265, -540);
-    create_wf3_column(3796, -931, -570);
-    create_wf3_column(3317, -2094, -1740);
-    create_wf3_column(4763, -3622, -2430);
-    create_wf3_column(5424, -4158, -2430);
-    create_wf3_column(4763, -3622, -4375);
-    create_wf3_column(2574, -5346, -4375);
+    create_wf3_column(-1081, -3147, -700);  
+    create_wf3_column(126, 565, -540);      
+    create_wf3_column(3796, -931, -100);    
+    create_wf3_column(3317, -2094, -1200);  
+    create_wf3_column(4763, -3622, -1900);  
+    create_wf3_column(5424, -4158, -1900);  
+    create_wf3_column(4763, -3322, -4375);  
+    create_wf3_column(2574, -5346, -4100); 
 
-    // ===============================================
-    // *** CASCATE TIPO 1 (NUOVA AGGIUNTA) ***
-    // ===============================================
-    
-    // Funzione helper per Waterfall 1
     let create_wf1_column = function(x, y_start, y_end) {
         let h = 211; 
         let overlap = 20;
         let stride = h - overlap;
         let cur = y_start;
-        
-        // Assumiamo direzione verso il basso come richiesto dalle coordinate (881 -> 1580)
         while (cur < y_end) {
-             let w = PP.assets.sprite.add(s, img_waterfall1, x, cur + h, 0, 1); // Pivot 0,1: y è il fondo
+             let w = PP.assets.sprite.add(s, img_waterfall1, x, cur + h, 0, 1); 
              PP.assets.sprite.animation_add(w, "flow1", 0, 9, 10, -1);
              PP.assets.sprite.animation_play(w, "flow1");
-             PP.layers.set_z_index(w, -5); // Stesso livello delle altre
+             PP.layers.set_z_index(w, 25); 
              cur += stride;
         }
     };
 
-    // 1. Colonna Waterfall 1
-    create_wf1_column(2860, 881, 1580);
+    create_wf1_column(2860, 881, 1880);
 
-    // 2. Cascata Singola Waterfall 1
     let wf1_single = PP.assets.sprite.add(s, img_waterfall1, 4544, 264, 0, 1);
     PP.assets.sprite.animation_add(wf1_single, "flow1", 0, 9, 10, -1);
     PP.assets.sprite.animation_play(wf1_single, "flow1");
-    PP.layers.set_z_index(wf1_single, -5);
+    PP.layers.set_z_index(wf1_single, 25); 
 
-    // 3. Overlay Waterfall 1 (Z-index -4: sopra cascata, sotto player 0)
     let overlay_wf1 = PP.assets.image.add(s, img_overlay_cascata, 4481, 333, 0, 1);
-    PP.layers.set_z_index(overlay_wf1, -4);
+    PP.layers.set_z_index(overlay_wf1, 26); 
 
-
-    // ===============================================
-    // *** CASCATA SINGOLA WF3 E OVERLAY ***
-    // ===============================================
     let wf3_single = PP.assets.sprite.add(s, img_waterfall3, 2284, -6326, 0, 1);
     PP.assets.sprite.animation_add(wf3_single, "flow3", 0, 9, 10, -1);
     PP.assets.sprite.animation_play(wf3_single, "flow3");
@@ -207,11 +197,17 @@ function create(s) {
     PP.physics.add(s, player, PP.physics.type.DYNAMIC);
     PP.physics.set_collision_rectangle(player, 138, 230, 20, 64);
     player.last_column_touch_time = 0;
+    
+    PP.layers.set_z_index(player, 100); 
 
-    // ... (Logica colonne) ...
-    let create_base_column = function(x, y) {
+    // --- COLONNE (Modificate con ID) ---
+    // ID assegnati da sinistra a destra (1, 2, 3, 4)
+    
+    let create_base_column = function(x, y, id) {
         let col = PP.assets.sprite.add(s, img_colonna_base, x, y, 0, 1);
         col.is_broken = false;
+        col.id = id; // Assegna ID
+        
         PP.assets.sprite.animation_add(col, "base_idle", 0, 0, 1, 0);
         PP.assets.sprite.animation_add(col, "base_break", 0, 43, 18, 0); 
         PP.assets.sprite.animation_play(col, "base_idle");
@@ -231,9 +227,11 @@ function create(s) {
         return col;
     };
 
-    let create_final_column = function(x, y) {
+    let create_final_column = function(x, y, id) {
         let col = PP.assets.sprite.add(s, img_colonna_finale, x, y, 0, 1);
         col.is_broken = false;
+        col.id = id; // Assegna ID
+        
         PP.assets.sprite.animation_add(col, "final_idle", 0, 0, 1, 0);
         PP.assets.sprite.animation_add(col, "final_break", 0, 51, 18, 0);
         PP.assets.sprite.animation_play(col, "final_idle");
@@ -253,10 +251,11 @@ function create(s) {
         return col;
     };
 
-    create_base_column(1094, -6250);
-    create_base_column(1594, -6250);
-    create_base_column(3095, -6250);
-    create_final_column(2345, -6245);
+    // Creazione colonne con ID (1, 2, 3, 4 da sinistra a destra)
+    create_base_column(1094, -6250, 1); // ID 1
+    create_base_column(1594, -6250, 2); // ID 2
+    create_base_column(3095, -6250, 4); // ID 4 (Ultima a destra)
+    create_final_column(2345, -6245, 3); // ID 3 (Penultima)
 
     floor = PP.shapes.rectangle_add(s, -500, 620, 3000, 10, "0x000000", 0);
     PP.physics.add(s, floor, PP.physics.type.STATIC);
@@ -328,7 +327,14 @@ function update(s) {
 
     if (PP.interactive.kb.is_key_down(s, PP.key_codes.R)) {
         let is_near_column = (PP.timers.get_time(s) - player.last_column_touch_time) < 100;
-        if (!is_player_attacking && is_near_column && has_spoken_to_avvoltoio && player.current_column && !player.current_column.is_broken) {
+        
+        // CONTROLLO AGGIUNTIVO: ORDINE COLONNE
+        let is_correct_column = false;
+        if (player.current_column && player.current_column.id === next_column_to_break) {
+            is_correct_column = true;
+        }
+
+        if (!is_player_attacking && is_near_column && has_spoken_to_avvoltoio && player.current_column && !player.current_column.is_broken && is_correct_column) {
             is_player_attacking = true;
             player.is_acting = true; 
             PP.physics.set_velocity_x(player, 0);
@@ -337,6 +343,13 @@ function update(s) {
                 if(player.current_column) {
                     player.current_column.is_broken = true;
                     PP.assets.sprite.animation_play(player.current_column, player.current_column.break_anim_key);
+                    
+                    // AGGIORNA IL PROSSIMO OBIETTIVO (Ordine: 2 -> 4 -> 1 -> 3)
+                    if (player.current_column.id === 2) next_column_to_break = 4;
+                    else if (player.current_column.id === 4) next_column_to_break = 1;
+                    else if (player.current_column.id === 1) next_column_to_break = 3;
+                    else if (player.current_column.id === 3) next_column_to_break = -1; // Finito
+
                     PP.timers.add_timer(s, 1000, function() {
                         if (avvoltoio_stage === 1) { avvoltoio_stage = 2; current_fly_start = fly_pos_2_start; current_fly_end = fly_pos_2_end; current_fly_height = 300; }
                         else if (avvoltoio_stage === 2) { avvoltoio_stage = 3; current_fly_start = fly_pos_3_start; current_fly_end = fly_pos_3_end; current_fly_height = 300; }

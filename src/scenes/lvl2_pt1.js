@@ -187,8 +187,14 @@ function create(s) {
     // *** 7. MULINO (13488, -1040) ***
     // ===============================================
     mulino_anim = PP.assets.sprite.add(s, img_mulino, 13488, -1040, 0, 1);
+    
+    // MODIFICATO: Aggiunta animazione "stop" e "spin"
+    PP.assets.sprite.animation_add(mulino_anim, "stop", 0, 0, 1, 0); // Frame 0 fermo
     PP.assets.sprite.animation_add(mulino_anim, "spin", 0, 3, 10, -1); 
-    PP.assets.sprite.animation_play(mulino_anim, "spin");
+    
+    // Inizia FERMO
+    PP.assets.sprite.animation_play(mulino_anim, "stop");
+    
     PP.layers.set_z_index(mulino_anim, 15); 
 
 
@@ -322,10 +328,16 @@ function update(s) {
                     PP.game_state.set_variable("muri_rotti", muri + 1);
                 }
                 
-                // Timer fine
+                // Timer fine (1.5s dopo)
                 PP.timers.add_timer(s, 1500, function() {
                     safe_destroy(player.current_wall);
                     wall_broken_pecora = true;
+                    
+                    // MODIFICA: FAI PARTIRE IL MULINO QUI
+                    if (mulino_anim) {
+                        PP.assets.sprite.animation_play(mulino_anim, "spin");
+                    }
+
                     is_player_attacking = false;
                     player.is_acting = false; 
                 }, false);
