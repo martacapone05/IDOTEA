@@ -66,13 +66,13 @@ let has_finished_story_dialogue = false; // Diventa true dopo aver letto tutto i
 
 // DEFINIZIONE DIALOGHI
 let dialoghi_gatto_fase1 = [
-    { speaker: "npc", text: "Oh, buonasera, giovane minatore! Forse tu puoi aiutarmi, nè?\nQuesto scarico d'acqua sta riversando proprio davanti alla mia\nbancarella, e io non so proprio come fare." },
+    { speaker: "npc", text: "Oh, buonasera, giovane minatore! Forse tu puoi aiutarmi?\nQuesto scarico d'acqua sta riversando proprio davanti alla mia\nbancarella, e io non so proprio come fare." },
     { speaker: "npc", text: "Forse è colpa di quell'ostacolo che ha deviato il flusso, sì sì…" }
 ];
 
 let dialoghi_gatto_fase2 = [
     { speaker: "npc", text: "Ah! Ottima tecnica di spalla, wakamono, molto bene!\nCome dice il sensei: l'acqua che scorre lenta,\ncol tempo modella anche la roccia." },
-    { speaker: "npc", text: "Prima o poi avrebbe danneggiato il mio umile mise, nè…" },
+    { speaker: "npc", text: "Prima o poi avrebbe danneggiato il mio umile mise…" },
     { speaker: "player", text: "Quella non è acqua, sono residui chimici.\nNon dovrebbero scorrere a cielo aperto, è veleno!" },
     { speaker: "npc", text: "Ma è l'unico modo che ho per cucinare il mio ramen, anche se…\nun tempo, ho l'impressione che il sapore fosse migliore, sì…" },
     { speaker: "player", text: "È colpa di un incantesimo che ha avvelenato la Fonte.\nIl mondo non deve essere così, e io posso spezzare tutto questo\nse raggiungo la Fonte Eterna." },

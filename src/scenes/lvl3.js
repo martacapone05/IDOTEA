@@ -198,19 +198,19 @@ function create(s) {
     let overlay_wf1 = PP.assets.image.add(s, img_overlay_cascata2, 4481, 328, 0, 1);
     PP.layers.set_z_index(overlay_wf1, 26); 
 
-    let wf3_single = PP.assets.sprite.add(s, img_waterfall3, 2284, -6529, 0, 1);
+    let wf3_single = PP.assets.sprite.add(s, img_waterfall3, 2284, -6326, 0, 1);
     PP.assets.sprite.animation_add(wf3_single, "flow3", 0, 9, 10, -1);
     PP.assets.sprite.animation_play(wf3_single, "flow3");
-    PP.layers.set_z_index(wf3_single, 10); 
+    PP.layers.set_z_index(wf3_single, 15); 
 
     let overlay_wf3 = PP.assets.image.add(s, img_overlay_cascata, 2226, -6271, 0, 1);
-    PP.layers.set_z_index(overlay_wf3, 11);
+    PP.layers.set_z_index(overlay_wf3, 16);
 
 
     // SPAWN INIZIALE LVL3
-    let start_x = -1400;
-    let start_y = 590;
 
+    let start_x = 1000
+    let start_y = -6500
 
     if (PP.game_state.get_variable("punto_di_partenza") == "fine") {
         start_x = -1400; 
