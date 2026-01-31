@@ -25,9 +25,10 @@ let img_ladder_vera;
 // SFONDO DIALOGO
 let img_dialogue_bg; 
 
-// IMMAGINI COMANDI
+// IMMAGINI COMANDI E VIGNETTE
 let img_comando_e;
-let img_comando_r; // NUOVO
+let img_comando_r; 
+let img_vignetta_gatto; 
 
 let background1;
 let background2;
@@ -42,10 +43,12 @@ let floor;
 let funivia_zone; 
 let wf_damage_zone; 
 
-// BOTTONI
+// BOTTONI E VIGNETTE
 let btn_e_gatto;
 let btn_e_ladder; 
-let btn_r_muro; // NUOVO BOTTONE R
+let btn_r_muro; 
+let btn_e_funivia_top; 
+let vignetta_gatto; 
 
 // VARIABILI SISTEMA DIALOGHI
 let npc_list = [];
@@ -66,6 +69,9 @@ let cat_npc_ref = null;
 // NUOVE VARIABILI STATO GATTO
 let is_cat_quest_completed = false; // Diventa true dopo aver rotto il muro
 let has_finished_story_dialogue = false; // Diventa true dopo aver letto tutto il dialogo Fase 2
+
+// VARIABILE PER LA VIGNETTA (Per farla sparire per sempre)
+let has_seen_vignetta_gatto = false; 
 
 // DEFINIZIONE DIALOGHI
 let dialoghi_gatto_fase1 = [
@@ -126,9 +132,10 @@ function preload(s) {
     // CARICAMENTO SFONDO DIALOGO
     img_dialogue_bg = PP.assets.image.load(s, "assets/images/dialoghi/dialogo2.png");
     
-    // CARICAMENTO COMANDI
+    // CARICAMENTO COMANDI E VIGNETTE
     img_comando_e = PP.assets.image.load(s, "assets/images/comando_e.png");
     img_comando_r = PP.assets.image.load(s, "assets/images/comando_r.png");
+    img_vignetta_gatto = PP.assets.image.load(s, "assets/images/vignette/vignetta_gatto.png");
 
     preload_platforms(s);
     preload_player(s);
@@ -145,6 +152,9 @@ function create(s) {
     waterfall_sequence_triggered = false;
     is_cat_quest_completed = false;     // Reset
     has_finished_story_dialogue = false; // Reset
+    
+    // Reset variabile vignetta
+    has_seen_vignetta_gatto = false;
 
     // PARALLAX
     background1 = PP.assets.tilesprite.add(s, img_background1, 0, 0, 1280, 800, 0, 0);
@@ -316,6 +326,18 @@ function create(s) {
     btn_r_muro = PP.assets.image.add(s, img_comando_r, 4646, -2133, 0, 0);
     btn_r_muro.visibility.alpha = 0;
     PP.layers.set_z_index(btn_r_muro, 9999);
+
+
+    btn_e_funivia_top = PP.assets.image.add(s, img_comando_e, 7082, -4183, 0, 0);
+    btn_e_funivia_top.visibility.alpha = 0;
+    PP.layers.set_z_index(btn_e_funivia_top, 9999);
+
+    // ===============================================
+    // *** AGGIUNTA VIGNETTA GATTO (4322, -2322) ***
+    // ===============================================
+    vignetta_gatto = PP.assets.image.add(s, img_vignetta_gatto, 4322, -2322, 0, 0);
+    vignetta_gatto.visibility.alpha = 0;
+    PP.layers.set_z_index(vignetta_gatto, 28); // Dietro al gatto
 
 
     let sgabelli = PP.assets.image.add(s, img_sgabelli, 4203, -2045, 0, 1);
@@ -581,59 +603,39 @@ function update(s) {
     }
 
     let vel_x = PP.physics.get_velocity_x(player);
-    if (vel_x > 50) player.cam_target_x = -200;
-    else if (vel_x < -50) player.cam_target_x = 200;
-    else player.cam_target_x = 0;
+    if (vel_x > 50) player.cam_target_x = -200;      // Guarda a destra (Player a sinistra)
+    else if (vel_x < -50) player.cam_target_x = 200; // Guarda a sinistra (Player a destra)
+    else player.cam_target_x = 0;                    // Centrato
 
     player.cam_offset_x += (player.cam_target_x - player.cam_offset_x) * 0.03;
 
-    // LOGICA CAMERA Y (CORRETTA)
-    if (player.geometry.x > 2000 && player.geometry.x < 5700 &&
-        player.geometry.y < -1700 && player.geometry.y > -2500) {
-        player.cam_target_y = 200;
-    }
-    else if (player.geometry.x > 4900 && player.geometry.x < 5690 &&
-    player.geometry.y < 200 && player.geometry.y > -600) {
-        player.cam_target_y = -40;
-    }
-    else if (player.geometry.x > 2000 && player.geometry.x < 5700 &&
-    player.geometry.y < -3550 && player.geometry.y > -4200) {
-        player.cam_target_y = -40;
-    }
-    else if (player.geometry.x < 2000) {
+    // 2. Calcolo offset Y (Guardare sopra/sotto in certe zone)
+    if (player.geometry.x > 7500) {
+        player.cam_target_y = -20;
+    } else {
         player.cam_target_y = 120;
     }
-    else if (player.geometry.x > 5870 && player.geometry.x < 6400 &&
-    player.geometry.y < -4150 && player.geometry.y > -3700) {
-        player.cam_target_y = -40;
-    }
-    else if (player.geometry.x > 2000 && player.geometry.x < 5700 &&
-    player.geometry.y < -3550 && player.geometry.y > -4200) {
-        player.cam_target_y = -40;
-    }
-    else if (player.geometry.x > 6400 && player.geometry.x < 8500) {
-        player.cam_target_y = 200;
-    } 
-    // ELSE FONDAMENTALE PER RESETTARE LA CAMERA
-    else {
-        player.cam_target_y = -40;
-    }
 
-    player.cam_offset_y += (player.cam_target_y - player.cam_offset_y) * 0.02;
+    player.cam_offset_y += (player.cam_target_y - player.cam_offset_y) * 0.03;
+
+    // 3. APPLICAZIONE OFFSET ALLA CAMERA (Questa riga mancava!)
     PP.camera.set_follow_offset(s, player.cam_offset_x, player.cam_offset_y);
 
-    background1.tile_geometry.x = PP.camera.get_scroll_x(s) * 0.1
-    background2.tile_geometry.x = PP.camera.get_scroll_x(s) * 0.15
-    background3.tile_geometry.x = PP.camera.get_scroll_x(s) * 0.2
-    background4.tile_geometry.x = PP.camera.get_scroll_x(s) * 0.25
+    // ===============================================
+    
+    let scroll_x = PP.camera.get_scroll_x(s);
+    background1.tile_geometry.x = scroll_x * 0.1;
+    background2.tile_geometry.x = scroll_x * 0.2;
+    background3.tile_geometry.x = scroll_x * 0.5;
 
-    if (player.geometry.y > 1600) {
+    // GAME OVER
+    if (player.geometry.y > 4000) {
         console.log("Caduto nel vuoto! Game Over...");
-        PP.game_state.set_variable("last_scene", "lvl1_pt2");
+        PP.game_state.set_variable("last_scene", "lvl2_pt1");
         PP.scenes.start("game_over");
-        
+
         player.geometry.x = 0;
-        player.geometry.y = 550;
+        player.geometry.y = 520;
         player.hp = 4;
         PP.game_state.set_variable("player_hp", 4);
         PP.physics.set_velocity_x(player, 0);
@@ -642,51 +644,84 @@ function update(s) {
         respawn_hearts(s, player);
     }
 
-    // =======================================================
-    // *** GESTIONE VISIBILITÀ BOTTONI (PROMPT) ***
-    // =======================================================
+    // --- MODIFICATO QUI: TRIGGER PIU' A DESTRA ---
+    if (player.geometry.x > 16300) { // Era 15930
+        PP.game_state.set_variable("punto_di_partenza", "avanti_da_pt1");
+        PP.scenes.start("lvl2_pt2");
+    }
+
+    // ===============================================
+    // *** GESTIONE VISIBILITÀ BOTTONI (500px) ***
+    // ===============================================
     
-    // 1. BOTTONE E (GATTO)
-    if (btn_e_gatto) {
-        let dist_gatto = Math.abs(player.geometry.x - 4209);
-        if (dist_gatto < 200 && !dialogue_active) {
-            btn_e_gatto.visibility.alpha = 1;
+    // Bottone E (Pecora)
+    if (btn_e_pecora) {
+        // La pecora è a circa 12840
+        let dist = Math.abs(player.geometry.x - 12840);
+        if (dist < 500 && !dialogue_active) {
+            btn_e_pecora.visibility.alpha = 1;
         } else {
-            btn_e_gatto.visibility.alpha = 0;
+            btn_e_pecora.visibility.alpha = 0;
         }
     }
 
-    // 2. BOTTONE E (SCALA)
-    if (btn_e_ladder) {
-        // Distanza dal punto -588 (dove sta la scala/bottone)
-        let dist_ladder_x = Math.abs(player.geometry.x - (-588));
-        let dist_ladder_y = Math.abs(player.geometry.y - 583);
-
-        // Controllo sia X che Y per evitare che appaia se sei su un'altra piattaforma
-        if (dist_ladder_x < 200 && dist_ladder_y < 200 && !dialogue_active) {
-            btn_e_ladder.visibility.alpha = 1;
-        } else {
-            btn_e_ladder.visibility.alpha = 0;
-        }
-    }
-
-    // 3. BOTTONE R (MURO)
+    // Bottone R (Muro)
     if (btn_r_muro) {
-        let dist_muro = Math.abs(player.geometry.x - 4646);
-        // Appare se vicino, se non stiamo attaccando, e se il muro non è ancora rotto
-        // (waterfall_sequence_triggered diventa true quando il muro si rompe)
-        if (dist_muro < 200 && !is_player_attacking && !waterfall_sequence_triggered) {
+        // Il muro è a circa 13226
+        let dist = Math.abs(player.geometry.x - 13226);
+        // Mostra solo se vicino, non attaccando e muro non rotto
+        if (dist < 500 && !is_player_attacking && !wall_broken_pecora) {
             btn_r_muro.visibility.alpha = 1;
         } else {
             btn_r_muro.visibility.alpha = 0;
         }
     }
 
-    // 4. DISTRUZIONE BOTTONE R SE SI ATTACCA
-    if (is_player_attacking && btn_r_muro) {
-        PP.assets.destroy(btn_r_muro);
-        btn_r_muro = null;
+    // Bottone E (Funivia)
+    if (btn_e_funivia) {
+        let dist = Math.abs(player.geometry.x - (-392));
+        if (dist < 500) {
+            btn_e_funivia.visibility.alpha = 1;
+        } else {
+            btn_e_funivia.visibility.alpha = 0;
+        }
     }
+
+    // Bottone E (Funivia ALTA - 7082, -4183)
+    if (btn_e_funivia_top) {
+        let dist_x = Math.abs(player.geometry.x - 7082);
+        let dist_y = Math.abs(player.geometry.y - (-4183));
+        
+        // Controllo combinato X e Y perché è in alto
+        if (dist_x < 500 && dist_y < 500) {
+            btn_e_funivia_top.visibility.alpha = 1;
+        } else {
+            btn_e_funivia_top.visibility.alpha = 0;
+        }
+    }
+
+    // GESTIONE VIGNETTA GATTO (MODIFICATA)
+    if (vignetta_gatto) {
+        if (has_seen_vignetta_gatto) {
+            vignetta_gatto.visibility.alpha = 0;
+        } else {
+            let dist_gatto_vignetta = Math.abs(player.geometry.x - 4322);
+            // SE SEI TROPPO VICINO (< 100): SPARISCE PER SEMPRE
+            if (dist_gatto_vignetta < 100) {
+                has_seen_vignetta_gatto = true;
+                vignetta_gatto.visibility.alpha = 0;
+            } 
+            // SE SEI NEL RAGGIO DI APPARIZIONE (<= 800) MA NON TROPPO VICINO
+            else if (dist_gatto_vignetta <= 800) {
+                vignetta_gatto.visibility.alpha = 1;
+            } 
+            // SE SEI LONTANO
+            else {
+                vignetta_gatto.visibility.alpha = 0;
+            }
+        }
+    }
+
 }
 
 // ==========================================================

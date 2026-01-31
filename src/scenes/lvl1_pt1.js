@@ -6,9 +6,13 @@ let img_topo;
 let img_dialogue_bg; 
 let img_condizionatore2;
 
-// NUOVE IMMAGINI COMANDI
+// NUOVE IMMAGINI COMANDI E VIGNETTE
 let img_comando_r;
 let img_comando_e;
+let img_vignetta_topo; 
+
+// NUOVO FUMO
+let img_smoke3; 
 
 let overlay; 
 let info;
@@ -18,9 +22,10 @@ let player;
 let floor;
 let traps = [];
 
-// BOTTONI OGGETTI
+// OGGETTI SCENA
 let btn_r;
 let btn_e;
+let vignetta_topo; 
 
 // Lista NPC e variabili dialogo
 let npc_list = [];
@@ -37,6 +42,9 @@ let is_player_attacking = false;
 
 // NUOVA VARIABILE STATO TOPO
 let has_spoken_to_topo = false;
+
+// VARIABILE PER LA VIGNETTA (Per farla sparire per sempre)
+let has_seen_vignetta_topo = false; 
 
 // Configurazione NPC
 const NPC_INTERACTION_RANGE = 200; 
@@ -83,9 +91,13 @@ function preload(s) {
     // SFONDO DIALOGO
     img_dialogue_bg = PP.assets.image.load(s, "assets/images/dialoghi/dialogo1.png");
     
-    // CARICAMENTO COMANDI
+    // CARICAMENTO COMANDI E VIGNETTE
     img_comando_r = PP.assets.image.load(s, "assets/images/comando_r.png");
     img_comando_e = PP.assets.image.load(s, "assets/images/comando_e.png");
+    img_vignetta_topo = PP.assets.image.load(s, "assets/images/vignette/vignetta_topo.png");
+
+    // CARICAMENTO FUMO 3 (500x625)
+    img_smoke3 = PP.assets.sprite.load_spritesheet(s, "assets/images/smoke3sprites.png", 500, 625);
 
     preload_platforms(s);
     preload_player(s);
@@ -98,7 +110,10 @@ function create(s) {
 
     reset_npcs(); 
     is_player_attacking = false;
-    has_spoken_to_topo = false; // Reset stato dialogo
+    has_spoken_to_topo = false; 
+    
+    // Reset variabile vignetta quando si ricarica il livello
+    has_seen_vignetta_topo = false; 
 
     let start_x = 80;
     let start_y = 500;
@@ -136,7 +151,25 @@ function create(s) {
     let cond2 = PP.assets.sprite.add(s, img_condizionatore2, 10910, -980, 0, 1);
     PP.assets.sprite.animation_add(cond2, "spin", 0, 4, 10, -1);
     PP.assets.sprite.animation_play(cond2, "spin");
-    PP.layers.set_z_index(cond2, 15); // Z-index intermedio per visibilità corretta
+    PP.layers.set_z_index(cond2, 15); 
+
+    // =======================================================
+    // *** AGGIUNTA FUMO 3 (4 Coordinate) ***
+    // =======================================================
+    let smoke_positions = [
+        {x: 482, y: 682},
+        {x: 951, y: 641},
+        {x: 1405, y: 655},
+        {x: 6050, y: 235}
+    ];
+
+    smoke_positions.forEach(pos => {
+        let sm = PP.assets.sprite.add(s, img_smoke3, pos.x, pos.y, 0, 0);
+        PP.assets.sprite.animation_add(sm, "smoke_loop", 0, 11, 10, -1);
+        PP.assets.sprite.animation_play(sm, "smoke_loop");
+        PP.layers.set_z_index(sm, 25); 
+    });
+
 
     // PLAYER
     player = PP.assets.sprite.add(s, img_player, start_x, start_y, 0.5, 1);
@@ -207,9 +240,16 @@ function create(s) {
     PP.layers.set_z_index(btn_r, 9999); // Alto ma sotto overlay e HUD
 
     // Bottone E (Vicino al topo)
-    btn_e = PP.assets.image.add(s, img_comando_e, 8300, -91, 0, 0);
+    btn_e = PP.assets.image.add(s, img_comando_e, 8174, -91, 0, 0);
     btn_e.visibility.alpha = 0; // Invisibile all'inizio
     PP.layers.set_z_index(btn_e, 9999); 
+
+    // ===============================================
+    // *** AGGIUNTA VIGNETTA TOPO (7551, -250) ***
+    // ===============================================
+    vignetta_topo = PP.assets.image.add(s, img_vignetta_topo, 7551, -250, 0, 0);
+    vignetta_topo.visibility.alpha = 0;
+    PP.layers.set_z_index(vignetta_topo, 28); // Dietro al topo
 
 
     create_hud(s, player);
@@ -364,13 +404,13 @@ function update(s) {
     }
 
     // =======================================================
-    // *** GESTIONE VISIBILITÀ BOTTONI (PROMPT) ***
+    // *** GESTIONE VISIBILITÀ BOTTONI E VIGNETTE ***
     // =======================================================
     
     // GESTIONE BOTTONE R (MURO)
     if (btn_r) {
         let dist_muro = Math.abs(player.geometry.x - 7857);
-        if (dist_muro < 500 && !is_player_attacking) {
+        if (dist_muro < 200 && !is_player_attacking) {
             btn_r.visibility.alpha = 1;
         } else {
             btn_r.visibility.alpha = 0;
@@ -382,10 +422,34 @@ function update(s) {
         let dist_topo = Math.abs(player.geometry.x - 8174);
         
         // Deve essere vicino E non deve esserci un dialogo attivo
-        if (dist_topo < 500 && !dialogue_active) {
+        if (dist_topo < 200 && !dialogue_active) {
             btn_e.visibility.alpha = 1;
         } else {
             btn_e.visibility.alpha = 0;
+        }
+    }
+
+    // GESTIONE VIGNETTA TOPO (MODIFICATA)
+    if (vignetta_topo) {
+        // Se l'abbiamo già vista e fatta sparire, non mostrarla più
+        if (has_seen_vignetta_topo) {
+            vignetta_topo.visibility.alpha = 0;
+        } else {
+            let dist_vignetta = Math.abs(player.geometry.x - 7551);
+            
+            // SE SEI TROPPO VICINO (< 100): SPARISCE PER SEMPRE
+            if (dist_vignetta < 100) {
+                has_seen_vignetta_topo = true;
+                vignetta_topo.visibility.alpha = 0;
+            } 
+            // SE SEI NEL RAGGIO DI APPARIZIONE (< 800) MA NON TROPPO VICINO
+            else if (dist_vignetta <= 800) {
+                vignetta_topo.visibility.alpha = 1;
+            } 
+            // SE SEI LONTANO
+            else {
+                vignetta_topo.visibility.alpha = 0;
+            }
         }
     }
 }
