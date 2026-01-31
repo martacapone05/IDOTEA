@@ -32,7 +32,7 @@ function create(s) {
 }
 
 function update(s) {
-    // --- LOGICA TASTIERA (SPAZIO O INVIO) ---
+    // LOGICA TASTIERA (SPAZIO O INVIO)
     if (PP.interactive.kb.is_key_down(s, PP.key_codes.SPACE) || 
         PP.interactive.kb.is_key_down(s, PP.key_codes.ENTER)) {
         

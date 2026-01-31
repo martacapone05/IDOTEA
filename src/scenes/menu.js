@@ -17,7 +17,7 @@ let button_positions = [
     { x: 1162, y: 671 }   // CREDITI
 ];
 
-// Scala dei bottoni (regola se troppo grandi/piccoli)
+// Scala dei bottoni
 let button_scale = 0.038;
 
 function preload(s) {
@@ -33,7 +33,6 @@ function create(s) {
 
     PP.game_state.set_variable("muri_rotti", 0);
     
-    // Sfondo copertina
     PP.assets.image.add(s, img_copertina, 0, 0, 0, 0);
 
     // Reset variabili di gioco
@@ -92,7 +91,7 @@ function update_button_highlight() {
 
 function activate_menu_option(index) {
     if (index === 0) {
-        PP.scenes.start("lvl1_pt1");
+        PP.scenes.start("lvl3");
     } else if (index === 1) {
         PP.scenes.start("tavole");
     } else if (index === 2) {

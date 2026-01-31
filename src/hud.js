@@ -13,11 +13,11 @@ let hud_active_hearts = [];
 let btn_info_zone;
 
 function preload_hud(s) {
-    // 1. Carichiamo gli asset per l'HUD (Interfaccia)
+    // Carichiamo gli asset per l'HUD (Interfaccia)
     hud_cuore_anim = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_cuore.png", 1280, 720);
     hud_boccetta_anim = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_boccetta.png", 1280, 720);
 
-    // 2. Carichiamo le immagini per gli oggetti a terra
+    // Carichiamo le immagini per gli oggetti a terra
     img_cuore_pickup = PP.assets.image.load(s, "assets/images/cuore.png");
     img_boccetta_pickup = PP.assets.image.load(s, "assets/images/boccetta.png");
 }
@@ -27,7 +27,7 @@ function create_hud(s, player) {
     hud_heart_positions = [];
     hud_active_hearts = [];
 
-    // --- RECUPERO DATI SALVATI ---
+    // RECUPERO DATI SALVATI
     // Recupera HP (che game_over ha resettato a 4)
     let saved_hp = PP.game_state.get_variable("player_hp");
     if (saved_hp === undefined || saved_hp === null) {
@@ -76,12 +76,12 @@ function create_hud(s, player) {
     update_boccetta_graphic(player);
 
     // 4. BOTTONE INFO (Per andare ai comandi)
-    btn_info_zone = PP.shapes.rectangle_add(s, 1237, 47, 53, 62, "0x00FF00", 0); // Invisibile (alpha 0)
+    btn_info_zone = PP.shapes.rectangle_add(s, 1237, 47, 53, 62, "0x00FF00", 0);
     btn_info_zone.tile_geometry.scroll_factor_x = 0;
     btn_info_zone.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(btn_info_zone, 10001); 
 
-    // --- INTERAZIONE MOUSE ---
+    // INTERAZIONE MOUSE
     PP.interactive.mouse.add(btn_info_zone, "pointerdown", function() {
         console.log("Salvo posizione e apro comandi...");
         
@@ -92,7 +92,7 @@ function create_hud(s, player) {
         PP.scenes.start("comandi");
     });
 
-    // --- INTERAZIONE TASTIERA (ESC) USA SOLO POLIPHASER ---
+    // --- INTERAZIONE TASTIERA (ESC)
     // Creiamo un loop con un timer che controlla se ESC è premuto
     let gestisci_input_hud = function() {
         
@@ -120,7 +120,7 @@ function create_hud(s, player) {
     };
 }
 
-// --- FUNZIONI DI SUPPORTO ---
+// FUNZIONI DI SUPPORTO
 
 function create_collectible_fragment(s, x, y, player) {
     let frammento = PP.assets.image.add(s, img_boccetta_pickup, x, y, 0.5, 0.5);

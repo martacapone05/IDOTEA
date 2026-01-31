@@ -19,16 +19,15 @@ document.body.style.backgroundColor = "#000000";
 document.body.style.margin = "0";
 document.body.style.overflow = "hidden"; // Toglie le barre di scorrimento
 
-// --- AGGIUNTA SFONDO PAGINA CORRETTA ---
-// 1. Forza l'altezza e larghezza a coprire tutto lo schermo
+// AGGIUNTA SFONDO PAGINA CORRETTA
+// Forza l'altezza e larghezza a coprire tutto lo schermo
 document.body.style.height = "100vh"; 
 document.body.style.width = "100vw";
 
-// 2. Imposta l'immagine
+// Imposta l'immagine
 document.body.style.backgroundImage = "url('assets/images/sfondi/sfondone.png')";
 document.body.style.backgroundSize = "cover";   // Copre tutto lo schermo senza deformare
 document.body.style.backgroundPosition = "center center"; // Centra perfettamente
 document.body.style.backgroundRepeat = "no-repeat"; 
-// ----------------------------------------
 
 PP.game.create(config);

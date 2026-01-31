@@ -3,25 +3,20 @@ let jump_speed = 1350;
 let floor_height = 620; 
 let climb_speed = 450; 
 
-// MODIFICA 1: Iniziamo con "idle" invece di "stop"
 let curr_anim = "idle"; 
 
 function preload_player(s) {
     img_player = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_player.png", 185, 294);
 }
 
-// *** QUESTA E' LA FUNZIONE CHE MANCAVA E CAUSAVA L'ERRORE ***
 function create_player(s) {
-    // Funzione vuota di sicurezza per evitare errori
 }
-// ************************************************************
 
 function configure_player_animations(s, player) {
     PP.assets.sprite.animation_add(player, "run", 0, 7, 9, -1);         
     PP.assets.sprite.animation_add(player, "jump_up", 10, 12, 8, 0);
     PP.assets.sprite.animation_add_list(player, "jump_down", [14, 13, 15, 16, 17, 18], 8, 0);
     
-    // MODIFICA 2: Definizione dell'animazione IDLE
     PP.assets.sprite.animation_add_list(player, "idle", [24, 25, 26, 25], 4, -1);
     
     PP.assets.sprite.animation_add(player, "climb", 27, 33, 8, -1);
@@ -43,7 +38,6 @@ function manage_player_update(s, player) {
     if ((typeof is_dialogue_active === 'function' && is_dialogue_active()) || player.is_acting) {
         PP.physics.set_velocity_x(player, 0);
         
-        // Opzionale: se sta parlando o agendo ma non picconando, assicuriamoci che sia in idle
         if (!player.is_acting && curr_anim !== "idle") {
              PP.assets.sprite.animation_play(player, "idle");
              curr_anim = "idle";
@@ -88,7 +82,6 @@ function manage_player_update(s, player) {
                 next_anim = "run";
             } else {
                 PP.physics.set_velocity_x(player, 0);
-                // MODIFICA 3: Se non preme nulla, l'animazione successiva è "idle"
                 next_anim = "idle";
             }
         }
@@ -109,7 +102,6 @@ function manage_player_update(s, player) {
                 player.is_acting = true;
                 PP.timers.add_timer(s, 1500, function() {
                     player.is_acting = false; 
-                    // MODIFICA 4: Finita l'azione, torna in "idle"
                     PP.assets.sprite.animation_play(player, "idle");
                     curr_anim = "idle";
                 }, false);
@@ -119,7 +111,7 @@ function manage_player_update(s, player) {
             }
         }
         
-        // --- SALTO ---
+        // SALTO
         let vel_y = PP.physics.get_velocity_y(player);
         let is_stable = Math.abs(vel_y) < 10;
         let is_on_floor = (player.geometry.y >= 610);

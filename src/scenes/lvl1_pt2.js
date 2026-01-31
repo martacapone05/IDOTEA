@@ -19,16 +19,14 @@ let img_cat;
 let img_sgabelli;
 let img_muro_rompibile;
 
-// NUOVA VARIABILE SCALA
+let img_button_e;
+let img_button_r;
+let img_vignetta_gatto;
+
 let img_ladder_vera; 
 
 // SFONDO DIALOGO
 let img_dialogue_bg; 
-
-// IMMAGINI COMANDI E VIGNETTE
-let img_comando_e;
-let img_comando_r; 
-let img_vignetta_gatto; 
 
 let background1;
 let background2;
@@ -39,16 +37,13 @@ let info;
 let player;
 let floor;
 
+// Variabili per la gestione della vignetta gatto
+let vignetta_gatto_obj;
+let vignetta_gatto_removed = false;
+
 // Variabile per la zona funivia
 let funivia_zone; 
 let wf_damage_zone; 
-
-// BOTTONI E VIGNETTE
-let btn_e_gatto;
-let btn_e_ladder; 
-let btn_r_muro; 
-let btn_e_funivia_top; 
-let vignetta_gatto; 
 
 // VARIABILI SISTEMA DIALOGHI
 let npc_list = [];
@@ -66,12 +61,8 @@ let has_spoken_to_cat = false;
 let waterfall_sequence_triggered = false;
 let cat_npc_ref = null; 
 
-// NUOVE VARIABILI STATO GATTO
 let is_cat_quest_completed = false; // Diventa true dopo aver rotto il muro
 let has_finished_story_dialogue = false; // Diventa true dopo aver letto tutto il dialogo Fase 2
-
-// VARIABILE PER LA VIGNETTA (Per farla sparire per sempre)
-let has_seen_vignetta_gatto = false; 
 
 // DEFINIZIONE DIALOGHI
 let dialoghi_gatto_fase1 = [
@@ -110,7 +101,6 @@ function preload(s) {
     img_waterfall = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/waterfall1sprites.png", 119, 211);
     img_waterfall2 = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/waterfall2sprites.png", 126, 210);
     
-    // NUOVE SPRITE CASCATA
     img_waterfall_off = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/waterfall1offsprites.png", 119, 211);
     img_waterfall_on = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/waterfall1onsprites.png", 119, 211);
 
@@ -131,10 +121,10 @@ function preload(s) {
 
     // CARICAMENTO SFONDO DIALOGO
     img_dialogue_bg = PP.assets.image.load(s, "assets/images/dialoghi/dialogo2.png");
-    
-    // CARICAMENTO COMANDI E VIGNETTE
-    img_comando_e = PP.assets.image.load(s, "assets/images/comando_e.png");
-    img_comando_r = PP.assets.image.load(s, "assets/images/comando_r.png");
+
+    // CARICAMENTO BOTTONI E VIGNETTA
+    img_button_e = PP.assets.image.load(s, "assets/images/comando_e.png");
+    img_button_r = PP.assets.image.load(s, "assets/images/comando_r.png");
     img_vignetta_gatto = PP.assets.image.load(s, "assets/images/vignette/vignetta_gatto.png");
 
     preload_platforms(s);
@@ -144,7 +134,6 @@ function preload(s) {
 
 function create(s) {
     
-    // Checkpoint: salva questo livello come punto di respawn
     PP.game_state.set_variable("last_scene", "lvl1_pt2");
 
     reset_npcs(); 
@@ -152,9 +141,7 @@ function create(s) {
     waterfall_sequence_triggered = false;
     is_cat_quest_completed = false;     // Reset
     has_finished_story_dialogue = false; // Reset
-    
-    // Reset variabile vignetta
-    has_seen_vignetta_gatto = false;
+    vignetta_gatto_removed = false; // Reset logica vignetta
 
     // PARALLAX
     background1 = PP.assets.tilesprite.add(s, img_background1, 0, 0, 1280, 800, 0, 0);
@@ -173,14 +160,16 @@ function create(s) {
     background4.tile_geometry.scroll_factor_x = 0;
     background4.tile_geometry.scroll_factor_y = 0;
 
-    // ===============================================
-    // *** SCALA PER TORNARE INDIETRO (-700, 1300) ***
-    // ===============================================
+
+    // SCALA PER TORNARE INDIETRO
     let ladder_exit = PP.assets.image.add(s, img_ladder_vera, -700, 1300, 0, 1);
     PP.layers.set_z_index(ladder_exit, 20);
     PP.physics.add(s, ladder_exit, PP.physics.type.STATIC);
 
-    // *** CASCATA ORIGINALE (VISIVA) ***
+    let btn_e_scala = PP.assets.image.add(s, img_button_e, -588, 583, 0, 0); 
+    PP.layers.set_z_index(btn_e_scala, 30);
+
+    // CASCATA
     let wf_x = 3984;
     let wf_y_start = -2844; 
     let wf_y_end = -1711;
@@ -202,7 +191,7 @@ function create(s) {
         anim_counter++;
     }
 
-    // *** CASCATE AGGIUNTIVE TIPO 1 ***
+    // CASCATE TIPO 1
     let extra_wf_starts = [
         {x: 2465, y: 853},
         {x: 3149, y: 853}
@@ -222,7 +211,7 @@ function create(s) {
         }
     });
 
-    // *** NUOVE CASCATE TIPO 2 ***
+    // CASCATE TIPO 2
     let wf2_starts = [
         {x: 5183, y: 193},
         {x: 6387, y: -3414}
@@ -270,7 +259,7 @@ function create(s) {
         cond_anim_counter++;
     });
 
-    // NUOVI CONDIZIONATORI 2
+    // CONDIZIONATORI 2
     let pos_cond2 = [
         {x: -112, y: 1017},
         {x: 434, y: -3226},
@@ -308,36 +297,12 @@ function create(s) {
     register_npc(cat, "Gatto", dialoghi_gatto_fase1);
     cat_npc_ref = cat; 
 
-    // CREAZIONE BOTTONE E (vicino al gatto)
-    btn_e_gatto = PP.assets.image.add(s, img_comando_e, 4209, -2183, 0, 0); // Un po' sopra il gatto
-    btn_e_gatto.visibility.alpha = 0;
-    PP.layers.set_z_index(btn_e_gatto, 9999);
+    // BOTTONE E VIGNETTA GATTO
+    let btn_e_gatto = PP.assets.image.add(s, img_button_e, 4269, -2133, 0, 0); 
+    PP.layers.set_z_index(btn_e_gatto, 30);
 
-    // ===============================================
-    // *** NUOVO BOTTONE E (SCALA) ***
-    // ===============================================
-    btn_e_ladder = PP.assets.image.add(s, img_comando_e, -588, 583, 0, 0); 
-    btn_e_ladder.visibility.alpha = 0;
-    PP.layers.set_z_index(btn_e_ladder, 9999);
-
-    // ===============================================
-    // *** NUOVO BOTTONE R (MURO) ***
-    // ===============================================
-    btn_r_muro = PP.assets.image.add(s, img_comando_r, 4646, -2133, 0, 0);
-    btn_r_muro.visibility.alpha = 0;
-    PP.layers.set_z_index(btn_r_muro, 9999);
-
-
-    btn_e_funivia_top = PP.assets.image.add(s, img_comando_e, 7082, -4183, 0, 0);
-    btn_e_funivia_top.visibility.alpha = 0;
-    PP.layers.set_z_index(btn_e_funivia_top, 9999);
-
-    // ===============================================
-    // *** AGGIUNTA VIGNETTA GATTO (4322, -2322) ***
-    // ===============================================
-    vignetta_gatto = PP.assets.image.add(s, img_vignetta_gatto, 4322, -2322, 0, 0);
-    vignetta_gatto.visibility.alpha = 0;
-    PP.layers.set_z_index(vignetta_gatto, 28); // Dietro al gatto
+    vignetta_gatto_obj = PP.assets.image.add(s, img_vignetta_gatto, 4322, -2322, 0, 0);
+    PP.layers.set_z_index(vignetta_gatto_obj, 30);
 
 
     let sgabelli = PP.assets.image.add(s, img_sgabelli, 4203, -2045, 0, 1);
@@ -350,7 +315,7 @@ function create(s) {
 
     let punto = PP.game_state.get_variable("punto_di_partenza");
 
-    // Ritorno dal Livello 2 (Pecora/Montagna) tramite funivia
+    // Ritorno dal Livello 2 (Montagna) tramite funivia
     if (punto == "funivia_ritorno") {
         start_x = 7099; 
         start_y = -4000;
@@ -368,7 +333,7 @@ function create(s) {
         start_y = 1300;
         PP.game_state.set_variable("punto_di_partenza", "inizio");
     }
-    // RIPRESA DALLA PAUSA (Nuovo blocco)
+    // RIPRESA DALLA PAUSA
     else if (punto == "resume_pause") {
         console.log("Riprendo dalla pausa...");
         start_x = PP.game_state.get_variable("pausa_x");
@@ -395,9 +360,8 @@ function create(s) {
     configure_player_animations(s, player);
     create_platforms_lvl1_pt2(s, player);
 
-    // ===============================================
-    // *** LOGICA SCALA ***
-    // ===============================================
+    
+    // LOGICA SCALA
     PP.physics.add_overlap_f(s, player, ladder_exit, function(scene, p, l) {
         
         p.can_climb = true; 
@@ -411,16 +375,13 @@ function create(s) {
     });
 
 
-    // ===============================================
-    // *** MURO ROMPIBILE ***
-    // ===============================================
+    // MURO ROMPIBILE
     let x_muro = 4574;
     let y_muro = -2026;
     
     let muro = PP.assets.sprite.add(s, img_muro_rompibile, x_muro, y_muro, 0, 1);
     muro.is_broken = false;
     
-    // *** Z-INDEX 25 ***
     PP.layers.set_z_index(muro, 26); 
     
     PP.assets.sprite.animation_add(muro, "break", 0, 22, 10, 0);
@@ -430,7 +391,6 @@ function create(s) {
     
     s.muro_oggett = muro;
 
-    // *** SENSORE MURO RIDIMENSIONATO
     let sensore_width = 236;
     let sensore_height = 252;
     let sensore_x = 4734;
@@ -447,12 +407,12 @@ function create(s) {
         p.current_wall = obj_sensore.muro_collegato; 
     };
     PP.physics.add_overlap_f(s, player, sensore, on_sensore_overlap);
-    // ===============================================
+
+    let btn_r_muro = PP.assets.image.add(s, img_button_r, 4646, -2133, 0, 0);
+    PP.layers.set_z_index(btn_r_muro, 30);
 
 
-    // ==========================================================
-    // *** COLLIDER DANNO CASCATA ***
-    // ==========================================================
+    // COLLIDER DANNO CASCATA
     let wf_height_total = Math.abs(wf_y_end - wf_y_start) + 200; 
     let wf_center_y = wf_y_start + (wf_height_total / 2);
     let wf_center_x = wf_x + (119 / 2); 
@@ -467,7 +427,6 @@ function create(s) {
             hit_player(s, p);
         }
     });
-    // ==========================================================
 
     // HUD
     create_hud(s, player);
@@ -487,6 +446,10 @@ function create(s) {
             PP.scenes.start("animazione_transizione"); 
         }
     });
+
+    let btn_e_funivia = PP.assets.image.add(s, img_button_e, 7082, -4153, 0, 0); 
+    PP.layers.set_z_index(btn_e_funivia, 30);
+
 
     // CAMERA
     PP.camera.start_follow(s, player, 0, 100);
@@ -521,6 +484,20 @@ function update(s) {
     // CAMERA BOUNDS
     PP.camera.set_bounds(s, -1232, -5125, 10000, 6500);
 
+    // LOGICA VIGNETTA GATTO (CONTROLLO DISTANZA E STATO)
+    if (vignetta_gatto_obj && !vignetta_gatto_removed && player) {
+        let dist_gatto = Math.abs(player.geometry.x - 4209);
+        
+        if (has_spoken_to_cat) {
+            vignetta_gatto_obj.visibility.alpha = 0;
+            vignetta_gatto_removed = true;
+        } else if (dist_gatto <= 800) {
+            vignetta_gatto_obj.visibility.alpha = 1;
+        } else {
+            vignetta_gatto_obj.visibility.alpha = 0;
+        }
+    }
+
 
     // 1. GESTIONE INPUT DIALOGHI
     manage_npc_interaction(s, player);
@@ -529,7 +506,7 @@ function update(s) {
     if (s.muro_oggett && s.muro_oggett.is_broken && !waterfall_sequence_triggered) {
         waterfall_sequence_triggered = true;
         
-        // Aspetta che l'animazione del muro finisca (2300ms)
+        // Aspetta che l'animazione del muro finisca
         PP.timers.add_timer(s, 2300, function() {
             
             safe_destroy(s.muro_oggett); 
@@ -537,24 +514,22 @@ function update(s) {
             let muri = PP.game_state.get_variable("muri_rotti") || 0;
             PP.game_state.set_variable("muri_rotti", muri + 1);
 
-            // A. CAMBIA DIALOGO GATTO -> FASE 2
-            // Impostiamo anche che la quest è "tecnicamente" completata per attivare la fase 3 dopo
+            // CAMBIA DIALOGO GATTO -> FASE 2
             is_cat_quest_completed = true; 
             
             if (cat_npc_ref) {
                 cat_npc_ref.dialogues = dialoghi_gatto_fase2;
             }
 
-            // B. RIMUOVI COLLIDER DANNO
+            // RIMUOVI COLLIDER DANNO
             if (wf_damage_zone) {
                 PP.shapes.destroy(wf_damage_zone); 
                 wf_damage_zone = null;
             }
 
-            // C. ANIMAZIONE CASCATA VECCHIA CHE SCENDE
+            // ANIMAZIONE CASCATA VECCHIA CHE SCENDE
             waterfall_segments.forEach((seg, index) => {
                 
-                // <<< TIMER VELOCIZZATO A 400ms >>>
                 PP.timers.add_timer(s, index * 400, function() {
                     let x = seg.geometry.x;
                     let y = seg.geometry.y;
@@ -562,12 +537,11 @@ function update(s) {
                     safe_destroy(seg);
 
                     let seg_off = PP.assets.sprite.add(s, img_waterfall_off, x, y, 0, 0);
-                    // <<< ANIMAZIONE VELOCIZZATA A 20 FPS >>>
                     PP.assets.sprite.animation_add(seg_off, "play_off", 0, 7, 15, 0);
                     PP.assets.sprite.animation_play(seg_off, "play_off");
                     PP.layers.set_z_index(seg_off, 30);
 
-                    // <<< DISTRUZIONE DOPO 400ms (8 frame / 20 fps) >>>
+                    // DISTRUZIONE DOPO 400ms
                     PP.timers.add_timer(s, 400, function() {
                         safe_destroy(seg_off); 
                     }, false);
@@ -575,7 +549,7 @@ function update(s) {
                 }, false);
             });
 
-            // D. NUOVA CASCATA CHE APPARE
+            // NUOVA CASCATA CHE APPARE
             let new_wf = PP.assets.sprite.add(s, img_waterfall_on, 4677, -2066, 0, 1);
             PP.layers.set_z_index(new_wf, 20);
             PP.assets.sprite.animation_add(new_wf, "appear", 0, 7, 10, 0);
@@ -594,7 +568,7 @@ function update(s) {
     }
 
 
-    // 3. GESTIONE MOVIMENTO E IDLE
+    // GESTIONE MOVIMENTO E IDLE
     if (is_dialogue_active()) {
         PP.physics.set_velocity_x(player, 0);
         PP.assets.sprite.animation_play(player, "idle");
@@ -603,39 +577,58 @@ function update(s) {
     }
 
     let vel_x = PP.physics.get_velocity_x(player);
-    if (vel_x > 50) player.cam_target_x = -200;      // Guarda a destra (Player a sinistra)
-    else if (vel_x < -50) player.cam_target_x = 200; // Guarda a sinistra (Player a destra)
-    else player.cam_target_x = 0;                    // Centrato
+    if (vel_x > 50) player.cam_target_x = -200;
+    else if (vel_x < -50) player.cam_target_x = 200;
+    else player.cam_target_x = 0;
 
     player.cam_offset_x += (player.cam_target_x - player.cam_offset_x) * 0.03;
 
-    // 2. Calcolo offset Y (Guardare sopra/sotto in certe zone)
-    if (player.geometry.x > 7500) {
-        player.cam_target_y = -20;
-    } else {
+    // LOGICA CAMERA Y
+    if (player.geometry.x > 2000 && player.geometry.x < 5700 &&
+        player.geometry.y < -1700 && player.geometry.y > -2500) {
+        player.cam_target_y = 200;
+    }
+    else if (player.geometry.x > 4900 && player.geometry.x < 5690 &&
+    player.geometry.y < 200 && player.geometry.y > -600) {
+        player.cam_target_y = -40;
+    }
+    else if (player.geometry.x > 2000 && player.geometry.x < 5700 &&
+    player.geometry.y < -3550 && player.geometry.y > -4200) {
+        player.cam_target_y = -40;
+    }
+    else if (player.geometry.x < 2000) {
         player.cam_target_y = 120;
     }
+    else if (player.geometry.x > 5870 && player.geometry.x < 6400 &&
+    player.geometry.y < -4150 && player.geometry.y > -3700) {
+        player.cam_target_y = -40;
+    }
+    else if (player.geometry.x > 2000 && player.geometry.x < 5700 &&
+    player.geometry.y < -3550 && player.geometry.y > -4200) {
+        player.cam_target_y = -40;
+    }
+    else if (player.geometry.x > 6400 && player.geometry.x < 8500) {
+        player.cam_target_y = 200;
+    } 
+    else {
+        player.cam_target_y = -40;
+    }
 
-    player.cam_offset_y += (player.cam_target_y - player.cam_offset_y) * 0.03;
-
-    // 3. APPLICAZIONE OFFSET ALLA CAMERA (Questa riga mancava!)
+    player.cam_offset_y += (player.cam_target_y - player.cam_offset_y) * 0.02;
     PP.camera.set_follow_offset(s, player.cam_offset_x, player.cam_offset_y);
 
-    // ===============================================
-    
-    let scroll_x = PP.camera.get_scroll_x(s);
-    background1.tile_geometry.x = scroll_x * 0.1;
-    background2.tile_geometry.x = scroll_x * 0.2;
-    background3.tile_geometry.x = scroll_x * 0.5;
+    background1.tile_geometry.x = PP.camera.get_scroll_x(s) * 0.1
+    background2.tile_geometry.x = PP.camera.get_scroll_x(s) * 0.15
+    background3.tile_geometry.x = PP.camera.get_scroll_x(s) * 0.2
+    background4.tile_geometry.x = PP.camera.get_scroll_x(s) * 0.25
 
-    // GAME OVER
-    if (player.geometry.y > 4000) {
+    if (player.geometry.y > 1600) {
         console.log("Caduto nel vuoto! Game Over...");
-        PP.game_state.set_variable("last_scene", "lvl2_pt1");
+        PP.game_state.set_variable("last_scene", "lvl1_pt2");
         PP.scenes.start("game_over");
-
+        
         player.geometry.x = 0;
-        player.geometry.y = 520;
+        player.geometry.y = 550;
         player.hp = 4;
         PP.game_state.set_variable("player_hp", 4);
         PP.physics.set_velocity_x(player, 0);
@@ -643,90 +636,9 @@ function update(s) {
         if (typeof update_cuore_graphic === "function") update_cuore_graphic(player);
         respawn_hearts(s, player);
     }
-
-    // --- MODIFICATO QUI: TRIGGER PIU' A DESTRA ---
-    if (player.geometry.x > 16300) { // Era 15930
-        PP.game_state.set_variable("punto_di_partenza", "avanti_da_pt1");
-        PP.scenes.start("lvl2_pt2");
-    }
-
-    // ===============================================
-    // *** GESTIONE VISIBILITÀ BOTTONI (500px) ***
-    // ===============================================
-    
-    // Bottone E (Pecora)
-    if (btn_e_pecora) {
-        // La pecora è a circa 12840
-        let dist = Math.abs(player.geometry.x - 12840);
-        if (dist < 500 && !dialogue_active) {
-            btn_e_pecora.visibility.alpha = 1;
-        } else {
-            btn_e_pecora.visibility.alpha = 0;
-        }
-    }
-
-    // Bottone R (Muro)
-    if (btn_r_muro) {
-        // Il muro è a circa 13226
-        let dist = Math.abs(player.geometry.x - 13226);
-        // Mostra solo se vicino, non attaccando e muro non rotto
-        if (dist < 500 && !is_player_attacking && !wall_broken_pecora) {
-            btn_r_muro.visibility.alpha = 1;
-        } else {
-            btn_r_muro.visibility.alpha = 0;
-        }
-    }
-
-    // Bottone E (Funivia)
-    if (btn_e_funivia) {
-        let dist = Math.abs(player.geometry.x - (-392));
-        if (dist < 500) {
-            btn_e_funivia.visibility.alpha = 1;
-        } else {
-            btn_e_funivia.visibility.alpha = 0;
-        }
-    }
-
-    // Bottone E (Funivia ALTA - 7082, -4183)
-    if (btn_e_funivia_top) {
-        let dist_x = Math.abs(player.geometry.x - 7082);
-        let dist_y = Math.abs(player.geometry.y - (-4183));
-        
-        // Controllo combinato X e Y perché è in alto
-        if (dist_x < 500 && dist_y < 500) {
-            btn_e_funivia_top.visibility.alpha = 1;
-        } else {
-            btn_e_funivia_top.visibility.alpha = 0;
-        }
-    }
-
-    // GESTIONE VIGNETTA GATTO (MODIFICATA)
-    if (vignetta_gatto) {
-        if (has_seen_vignetta_gatto) {
-            vignetta_gatto.visibility.alpha = 0;
-        } else {
-            let dist_gatto_vignetta = Math.abs(player.geometry.x - 4322);
-            // SE SEI TROPPO VICINO (< 100): SPARISCE PER SEMPRE
-            if (dist_gatto_vignetta < 100) {
-                has_seen_vignetta_gatto = true;
-                vignetta_gatto.visibility.alpha = 0;
-            } 
-            // SE SEI NEL RAGGIO DI APPARIZIONE (<= 800) MA NON TROPPO VICINO
-            else if (dist_gatto_vignetta <= 800) {
-                vignetta_gatto.visibility.alpha = 1;
-            } 
-            // SE SEI LONTANO
-            else {
-                vignetta_gatto.visibility.alpha = 0;
-            }
-        }
-    }
-
 }
 
-// ==========================================================
-// *** FUNZIONE GESTIONE DANNO (HIT PLAYER) ***
-// ==========================================================
+// FUNZIONE GESTIONE DANNO (HIT PLAYER)
 function hit_player(s, player) {
     if (player.invulnerable) return;
 
@@ -773,9 +685,7 @@ function destroy(s) {
 
 PP.scenes.add("lvl1_pt2", preload, create, update, destroy);
 
-// ==========================================================
-// *** SISTEMA DIALOGHI E NPC ***
-// ==========================================================
+// SISTEMA DIALOGHI E NPC
 
 function register_npc(sprite_obj, name, dialogues) {
     sprite_obj.npc_name = name;
@@ -808,30 +718,23 @@ function get_nearest_interactable_npc(player) {
 
 function open_dialogue_popup(s, npc) {
     if (dialogue_active) return;
-    
-    // --- LOGICA AGGIORNAMENTO DIALOGHI NPC ---
-    // Se è il Topo e abbiamo già parlato con lui, cambiamo i dialoghi "al volo"
-    // (Nota: qui è il gatto, ma la logica è identica)
-    if (npc.npc_name === "Gatto" && is_cat_quest_completed && has_finished_story_dialogue) {
-        let frase_random = frasi_gatto_fase3[Math.floor(Math.random() * frasi_gatto_fase3.length)];
-        npc.dialogues = [{ speaker: "npc", text: frase_random }];
-    }
-    
     dialogue_active = true;
     current_npc = npc;
     current_dialogue_index = 0;
     
     has_spoken_to_cat = true; 
 
-    // Coordinate
+    // LOGICA DIALOGHI FASE 3
+    if (npc.npc_name === "Gatto" && is_cat_quest_completed && has_finished_story_dialogue) {
+        let frase_random = frasi_gatto_fase3[Math.floor(Math.random() * frasi_gatto_fase3.length)];
+        npc.dialogues = [{ speaker: "npc", text: frase_random }];
+    }
+
     let screen_center_x = 0; 
     let popup_y = 0; 
     
-    // Sfondo
     dialogue_popup = PP.assets.image.add(s, img_dialogue_bg, screen_center_x, popup_y, 0, 0);
-
     dialogue_popup.visibility.alpha = 0.85;
-
     dialogue_popup.tile_geometry.scroll_factor_x = 0;
     dialogue_popup.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_popup, 10001);
@@ -839,13 +742,11 @@ function open_dialogue_popup(s, npc) {
     let text_padding_left = 260;  
     let text_padding_top = 32;   
 
-    // Nome
     dialogue_speaker = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top, "", 22, "Luminari", "bold", "0xb3c9c9", null, 0, 0);
     dialogue_speaker.tile_geometry.scroll_factor_x = 0;
     dialogue_speaker.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_speaker, 10002);
     
-    // Testo
     dialogue_text = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top + 55, "", 20, "Avenir", "normal", "0xffffff", null, 0, 0);
     dialogue_text.tile_geometry.scroll_factor_x = 0;
     dialogue_text.tile_geometry.scroll_factor_y = 0;
@@ -870,8 +771,11 @@ function show_current_dialogue_line() {
 function close_dialogue_popup() {
     if (!dialogue_active) return;
     
-    // --- CONTROLLO FINE STORIA ---
+    // CONTROLLO FINE STORIA
+    // Se stavamo parlando col gatto e avevamo i dialoghi della Fase 2 attivi
     if (current_npc && current_npc.npc_name === "Gatto" && is_cat_quest_completed) {
+        // Se non abbiamo ancora segnato la fine della storia, lo facciamo ora.
+        // La prossima volta che apriamo il dialogo, entrerà nell'IF della Fase 3.
         if (!has_finished_story_dialogue) {
             has_finished_story_dialogue = true;
         }
@@ -881,13 +785,9 @@ function close_dialogue_popup() {
     current_npc = null;
     current_dialogue_index = 0;
     
-    // Usiamo PP.assets.destroy che è il metodo corretto in PoliPhaser
-    if (dialogue_popup) {
-        PP.assets.destroy(dialogue_popup);
-        dialogue_popup = null;
-    }
+    safe_destroy(dialogue_popup);
+    dialogue_popup = null;
     
-    // Rimuoviamo i testi
     if (dialogue_text) { PP.shapes.destroy(dialogue_text); dialogue_text = null; }
     if (dialogue_speaker) { PP.shapes.destroy(dialogue_speaker); dialogue_speaker = null; }
 }
@@ -926,29 +826,25 @@ function is_dialogue_active() {
     return dialogue_active;
 }
 
-// *** FUNZIONE SAFE DESTROY (IMPORTANTE!) ***
+// FUNZIONE SAFE DESTROY
 function safe_destroy(obj) {
     if (!obj) return;
     
-    // Prova 1: Metodo destroy diretto
     if (typeof obj.destroy === 'function') {
         obj.destroy();
         return;
     }
     
-    // Prova 2: Oggetto Phaser interno
     if (obj.ph_obj && typeof obj.ph_obj.destroy === 'function') {
         obj.ph_obj.destroy();
         return;
     }
     
-    // Prova 3: Se è uno sprite interno
     if (obj.sprite && typeof obj.sprite.destroy === 'function') {
         obj.sprite.destroy();
         return;
     }
 
-    // Fallback: Nascondi e sposta via
     if (obj.visibility) obj.visibility.alpha = 0;
     if (obj.geometry) obj.geometry.y = 10000;
 }

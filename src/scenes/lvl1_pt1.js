@@ -6,13 +6,9 @@ let img_topo;
 let img_dialogue_bg; 
 let img_condizionatore2;
 
-// NUOVE IMMAGINI COMANDI E VIGNETTE
-let img_comando_r;
-let img_comando_e;
+let img_button_e;
+let img_button_r;
 let img_vignetta_topo; 
-
-// NUOVO FUMO
-let img_smoke3; 
 
 let overlay; 
 let info;
@@ -22,10 +18,9 @@ let player;
 let floor;
 let traps = [];
 
-// OGGETTI SCENA
-let btn_r;
-let btn_e;
-let vignetta_topo; 
+// Variabili per la gestione della vignetta
+let vignetta_obj; 
+let vignetta_removed = false;
 
 // Lista NPC e variabili dialogo
 let npc_list = [];
@@ -37,19 +32,14 @@ let dialogue_text = null;
 let dialogue_speaker = null;
 let action_key_was_pressed = false; 
 
-// Variabile per gestione rottura muro
 let is_player_attacking = false;
 
-// NUOVA VARIABILE STATO TOPO
 let has_spoken_to_topo = false;
-
-// VARIABILE PER LA VIGNETTA (Per farla sparire per sempre)
-let has_seen_vignetta_topo = false; 
 
 // Configurazione NPC
 const NPC_INTERACTION_RANGE = 200; 
 
-// --- DEFINIZIONE DIALOGHI ---
+// DIALOGHI
 let dialoghi_topo_fase1 = [
     { speaker: "npc", text: "Coff coff… Grazie, ero intrappolato da ore…\nqualcuno deve avermi bloccato." },
     { speaker: "player", text: "Il tubo deve aver ceduto, questo posto sta cadendo a pezzi\nper colpa delle tossine nell’acqua e della ruggine." },
@@ -82,7 +72,7 @@ function preload(s) {
     img_muro_rompibile = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_muro.png", 364, 354);
     img_light = PP.assets.sprite.load_spritesheet(s, "assets/images/light1sprites.png", 707, 873);
     
-    // NUOVO CARICAMENTO: Condizionatore 2
+    // Condizionatore 2
     img_condizionatore2 = PP.assets.sprite.load_spritesheet(s, "assets/images/condizionatore2.png", 172, 134);
 
     // NPC TOPO
@@ -90,14 +80,11 @@ function preload(s) {
 
     // SFONDO DIALOGO
     img_dialogue_bg = PP.assets.image.load(s, "assets/images/dialoghi/dialogo1.png");
-    
-    // CARICAMENTO COMANDI E VIGNETTE
-    img_comando_r = PP.assets.image.load(s, "assets/images/comando_r.png");
-    img_comando_e = PP.assets.image.load(s, "assets/images/comando_e.png");
-    img_vignetta_topo = PP.assets.image.load(s, "assets/images/vignette/vignetta_topo.png");
 
-    // CARICAMENTO FUMO 3 (500x625)
-    img_smoke3 = PP.assets.sprite.load_spritesheet(s, "assets/images/smoke3sprites.png", 500, 625);
+    // CARICAMENTO BOTTONI E VIGNETTA
+    img_button_e = PP.assets.image.load(s, "assets/images/comando_e.png");
+    img_button_r = PP.assets.image.load(s, "assets/images/comando_r.png");
+    img_vignetta_topo = PP.assets.image.load(s, "assets/images/vignette/vignetta_topo.png");
 
     preload_platforms(s);
     preload_player(s);
@@ -105,15 +92,12 @@ function preload(s) {
 
 function create(s) {
 
-    // Checkpoint: salva questo livello come punto di respawn
     PP.game_state.set_variable("last_scene", "lvl1_pt1");
 
     reset_npcs(); 
     is_player_attacking = false;
     has_spoken_to_topo = false; 
-    
-    // Reset variabile vignetta quando si ricarica il livello
-    has_seen_vignetta_topo = false; 
+    vignetta_removed = false; // Reset logica vignetta
 
     let start_x = 80;
     let start_y = 500;
@@ -147,29 +131,10 @@ function create(s) {
         }, true); 
     });
 
-    // NUOVO CONDIZIONATORE 2 (9548, -973)
     let cond2 = PP.assets.sprite.add(s, img_condizionatore2, 10910, -980, 0, 1);
     PP.assets.sprite.animation_add(cond2, "spin", 0, 4, 10, -1);
     PP.assets.sprite.animation_play(cond2, "spin");
-    PP.layers.set_z_index(cond2, 15); 
-
-    // =======================================================
-    // *** AGGIUNTA FUMO 3 (4 Coordinate) ***
-    // =======================================================
-    let smoke_positions = [
-        {x: 482, y: 682},
-        {x: 951, y: 641},
-        {x: 1405, y: 655},
-        {x: 6050, y: 235}
-    ];
-
-    smoke_positions.forEach(pos => {
-        let sm = PP.assets.sprite.add(s, img_smoke3, pos.x, pos.y, 0, 0);
-        PP.assets.sprite.animation_add(sm, "smoke_loop", 0, 11, 10, -1);
-        PP.assets.sprite.animation_play(sm, "smoke_loop");
-        PP.layers.set_z_index(sm, 25); 
-    });
-
+    PP.layers.set_z_index(cond2, 15); // Z-index intermedio per visibilità corretta
 
     // PLAYER
     player = PP.assets.sprite.add(s, img_player, start_x, start_y, 0.5, 1);
@@ -190,9 +155,7 @@ function create(s) {
 
     create_platforms_lvl1_pt1(s, player);
 
-    // ============================================================
-    // *** NPC TOPO (Con Dialogo Dinamico) ***
-    // ============================================================
+    // NPC TOPO
     let topo = PP.assets.sprite.add(s, img_topo, 8259, 27, 0, 1);
     
     PP.layers.set_z_index(topo, 29); 
@@ -202,7 +165,13 @@ function create(s) {
 
     // Registriamo l'NPC con il dialogo iniziale
     register_npc(topo, "Topo", dialoghi_topo_fase1);
-    // ============================================================
+
+    let btn_topo = PP.assets.image.add(s, img_button_e, 8300, -91, 0, 0); 
+    PP.layers.set_z_index(btn_topo, 30);
+    
+    vignetta_obj = PP.assets.image.add(s, img_vignetta_topo, 7556, -289, 0, 0);
+    vignetta_obj.visibility.alpha = 0; // Invisibile all'inizio
+    PP.layers.set_z_index(vignetta_obj, 30);
 
 
     // MURO ROMPIBILE
@@ -229,27 +198,8 @@ function create(s) {
     };
     PP.physics.add_overlap_f(s, player, sensore, on_sensore_overlap);
 
-
-    // ===============================================
-    // *** AGGIUNTA BOTTONI (Prompt) ***
-    // ===============================================
-    
-    // Bottone R (Vicino al muro)
-    btn_r = PP.assets.image.add(s, img_comando_r, 7857, -91, 0, 0);
-    btn_r.visibility.alpha = 0; // Invisibile all'inizio
-    PP.layers.set_z_index(btn_r, 9999); // Alto ma sotto overlay e HUD
-
-    // Bottone E (Vicino al topo)
-    btn_e = PP.assets.image.add(s, img_comando_e, 8174, -91, 0, 0);
-    btn_e.visibility.alpha = 0; // Invisibile all'inizio
-    PP.layers.set_z_index(btn_e, 9999); 
-
-    // ===============================================
-    // *** AGGIUNTA VIGNETTA TOPO (7551, -250) ***
-    // ===============================================
-    vignetta_topo = PP.assets.image.add(s, img_vignetta_topo, 7551, -250, 0, 0);
-    vignetta_topo.visibility.alpha = 0;
-    PP.layers.set_z_index(vignetta_topo, 28); // Dietro al topo
+    let btn_r_muro = PP.assets.image.add(s, img_button_r, 7857, -91, 0, 0);
+    PP.layers.set_z_index(btn_r_muro, 30);
 
 
     create_hud(s, player);
@@ -294,11 +244,32 @@ function update(s) {
     // CAMERA BOUNDS
     PP.camera.set_bounds(s, 0, -2100, 12000, 3500);
 
+    // LOGICA VIGNETTA TOPO
+    if (vignetta_obj && !vignetta_removed && player) {
+        let dist_topo = Math.abs(player.geometry.x - 8259);
 
-    // 1. GESTIONE INPUT DIALOGHI
+        // Controllo se il muro è già stato rotto prima di mostrare la vignetta
+        if (player.current_wall && player.current_wall.is_broken) {
+            vignetta_obj.visibility.alpha = 0;
+            vignetta_removed = true;
+        } 
+        else if (dist_topo <= 50) {
+            vignetta_obj.visibility.alpha = 0;
+            vignetta_removed = true;
+        } 
+        else if (dist_topo <= 800) {
+            vignetta_obj.visibility.alpha = 1;
+        } 
+        else {
+            vignetta_obj.visibility.alpha = 0;
+        }
+    }
+
+
+    // GESTIONE INPUT DIALOGHI
     manage_npc_interaction(s, player);
 
-    // 1.5 GESTIONE TASTO R (ROTTURA MURO)
+    // GESTIONE TASTO R (ROTTURA MURO)
     if (PP.interactive.kb.is_key_down(s, PP.key_codes.R)) {
         if (!is_player_attacking && player.near_breakable_wall && player.current_wall && !player.current_wall.is_broken) {
             is_player_attacking = true;
@@ -306,16 +277,17 @@ function update(s) {
             PP.physics.set_velocity_x(player, 0);
             PP.assets.sprite.animation_play(player, "piccone");
             
-            // --- DISTRUZIONE BOTTONE R APPENA SI ATTACCA ---
-            if (btn_r) {
-                PP.assets.destroy(btn_r);
-                btn_r = null;
-            }
-            
             PP.timers.add_timer(s, 500, function() {
                 if(player.current_wall) {
                     player.current_wall.is_broken = true;
                     PP.assets.sprite.animation_play(player.current_wall, "break");
+                    
+                    // Sparizione vignetta nel momento dell'impatto
+                    if (vignetta_obj) {
+                        vignetta_obj.visibility.alpha = 0;
+                        vignetta_removed = true;
+                    }
+
                     let muri = PP.game_state.get_variable("muri_rotti") || 0;
                     PP.game_state.set_variable("muri_rotti", muri + 1);
                 }
@@ -331,18 +303,12 @@ function update(s) {
         }
     }
 
-    // 2. GESTIONE MOVIMENTO E IDLE
+    // GESTIONE MOVIMENTO E IDLE
     if (is_dialogue_active()) {
-        // --- SE PARLA: BLOCCA TUTTO ---
-        // Blocca la velocità
         PP.physics.set_velocity_x(player, 0);
-        
-        // Forza animazione IDLE
-        // Nota: Assicurati che "idle" sia il nome corretto della tua animazione da fermo
         PP.assets.sprite.animation_play(player, "idle");
         
     } else if (!is_player_attacking) {
-        // --- SE NON PARLA E NON ATTACCA: MUOVITI ---
         manage_player_update(s, player);
     }
 
@@ -402,56 +368,6 @@ function update(s) {
         PP.game_state.set_variable("punto_di_partenza", "arrivo_da_pt1");
         PP.scenes.start("lvl1_pt2");
     }
-
-    // =======================================================
-    // *** GESTIONE VISIBILITÀ BOTTONI E VIGNETTE ***
-    // =======================================================
-    
-    // GESTIONE BOTTONE R (MURO)
-    if (btn_r) {
-        let dist_muro = Math.abs(player.geometry.x - 7857);
-        if (dist_muro < 200 && !is_player_attacking) {
-            btn_r.visibility.alpha = 1;
-        } else {
-            btn_r.visibility.alpha = 0;
-        }
-    }
-
-    // GESTIONE BOTTONE E (TOPO)
-    if (btn_e) {
-        let dist_topo = Math.abs(player.geometry.x - 8174);
-        
-        // Deve essere vicino E non deve esserci un dialogo attivo
-        if (dist_topo < 200 && !dialogue_active) {
-            btn_e.visibility.alpha = 1;
-        } else {
-            btn_e.visibility.alpha = 0;
-        }
-    }
-
-    // GESTIONE VIGNETTA TOPO (MODIFICATA)
-    if (vignetta_topo) {
-        // Se l'abbiamo già vista e fatta sparire, non mostrarla più
-        if (has_seen_vignetta_topo) {
-            vignetta_topo.visibility.alpha = 0;
-        } else {
-            let dist_vignetta = Math.abs(player.geometry.x - 7551);
-            
-            // SE SEI TROPPO VICINO (< 100): SPARISCE PER SEMPRE
-            if (dist_vignetta < 100) {
-                has_seen_vignetta_topo = true;
-                vignetta_topo.visibility.alpha = 0;
-            } 
-            // SE SEI NEL RAGGIO DI APPARIZIONE (< 800) MA NON TROPPO VICINO
-            else if (dist_vignetta <= 800) {
-                vignetta_topo.visibility.alpha = 1;
-            } 
-            // SE SEI LONTANO
-            else {
-                vignetta_topo.visibility.alpha = 0;
-            }
-        }
-    }
 }
 
 function destroy(s) {
@@ -459,9 +375,6 @@ function destroy(s) {
 
 PP.scenes.add("lvl1_pt1", preload, create, update, destroy);
 
-// ==========================================================
-// *** SISTEMA DIALOGHI E NPC ***
-// ==========================================================
 
 function register_npc(sprite_obj, name, dialogues) {
     sprite_obj.npc_name = name;
@@ -495,8 +408,6 @@ function get_nearest_interactable_npc(player) {
 function open_dialogue_popup(s, npc) {
     if (dialogue_active) return;
     
-    // --- LOGICA AGGIORNAMENTO DIALOGHI NPC ---
-    // Se è il Topo e abbiamo già parlato con lui, cambiamo i dialoghi "al volo"
     if (npc.npc_name === "Topo" && has_spoken_to_topo) {
         let frase_random = frasi_topo_fase2[Math.floor(Math.random() * frasi_topo_fase2.length)];
         npc.dialogues = [{ speaker: "npc", text: frase_random }];
@@ -506,15 +417,11 @@ function open_dialogue_popup(s, npc) {
     current_npc = npc;
     current_dialogue_index = 0;
     
-    // Coordinate
     let screen_center_x = 0; 
     let popup_y = 0; 
     
-    // Sfondo
     dialogue_popup = PP.assets.image.add(s, img_dialogue_bg, screen_center_x, popup_y, 0, 0);
-
     dialogue_popup.visibility.alpha = 0.85;
-
     dialogue_popup.tile_geometry.scroll_factor_x = 0;
     dialogue_popup.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_popup, 10001);
@@ -522,13 +429,11 @@ function open_dialogue_popup(s, npc) {
     let text_padding_left = 260;  
     let text_padding_top = 32;   
 
-    // Nome
     dialogue_speaker = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top, "", 22, "Luminari", "bold", "0x01AA03", null, 0, 0);
     dialogue_speaker.tile_geometry.scroll_factor_x = 0;
     dialogue_speaker.tile_geometry.scroll_factor_y = 0;
     PP.layers.set_z_index(dialogue_speaker, 10002);
     
-    // Testo
     dialogue_text = PP.shapes.text_styled_add(s, text_padding_left, text_padding_top + 55, "", 20, "Avenir", "normal", "0xffffff", null, 0, 0);
     dialogue_text.tile_geometry.scroll_factor_x = 0;
     dialogue_text.tile_geometry.scroll_factor_y = 0;
@@ -544,7 +449,6 @@ function show_current_dialogue_line() {
     }
     
     let line = current_npc.dialogues[current_dialogue_index];
-    // MODIFICA: Usiamo "Tillidak" invece di "Tu"
     let speaker_name = (line.speaker === "npc") ? current_npc.npc_name : "Tillidak";
     
     PP.shapes.text_change(dialogue_speaker, speaker_name);
@@ -554,9 +458,6 @@ function show_current_dialogue_line() {
 function close_dialogue_popup() {
     if (!dialogue_active) return;
     
-    console.log("CHIUSURA DIALOGO AVVIATA");
-    
-    // --- SEGNA CHE ABBIAMO PARLATO CON L'NPC ---
     if (current_npc && current_npc.npc_name === "Topo") {
         has_spoken_to_topo = true;
     }
@@ -565,13 +466,11 @@ function close_dialogue_popup() {
     current_npc = null;
     current_dialogue_index = 0;
     
-    // Usiamo PP.assets.destroy che è il metodo corretto in PoliPhaser
     if (dialogue_popup) {
         PP.assets.destroy(dialogue_popup);
         dialogue_popup = null;
     }
     
-    // Rimuoviamo i testi
     if (dialogue_text) { PP.shapes.destroy(dialogue_text); dialogue_text = null; }
     if (dialogue_speaker) { PP.shapes.destroy(dialogue_speaker); dialogue_speaker = null; }
 }
@@ -586,12 +485,7 @@ function manage_npc_interaction(s, player) {
     let e_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.E);
     let down_pressed = PP.interactive.kb.is_key_down(s, PP.key_codes.SPACE);
     
-    let is_input_active = false;
-    if (dialogue_active) {
-        is_input_active = e_pressed || down_pressed;
-    } else {
-        is_input_active = e_pressed;
-    }
+    let is_input_active = dialogue_active ? (e_pressed || down_pressed) : e_pressed;
     
     if (is_input_active && !action_key_was_pressed) {
         if (dialogue_active) {
@@ -608,4 +502,13 @@ function manage_npc_interaction(s, player) {
 
 function is_dialogue_active() {
     return dialogue_active;
+}
+
+function safe_destroy(obj) {
+    if (!obj) return;
+    if (typeof obj.destroy === 'function') { obj.destroy(); return; }
+    if (obj.ph_obj && typeof obj.ph_obj.destroy === 'function') { obj.ph_obj.destroy(); return; }
+    if (obj.sprite && typeof obj.sprite.destroy === 'function') { obj.sprite.destroy(); return; }
+    if (obj.visibility) obj.visibility.alpha = 0;
+    if (obj.geometry) obj.geometry.y = 10000;
 }

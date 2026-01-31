@@ -1,4 +1,3 @@
-// VARIABILI IMMAGINI SFONDO
 let img_background1; // sfondo8
 let img_background2; // sfondo9
 
@@ -31,7 +30,7 @@ function preload(s) {
     img_info = PP.assets.image.load(s, "assets/images/info.png");
     img_player = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_player.png", 185, 294);
 
-    // CARICAMENTO CASCATA (10 frame, 214x218)
+    // CARICAMENTO CASCATA
     img_waterfall5 = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/waterfall5sprites.png", 214, 218);
 
     preload_platforms(s);
@@ -56,12 +55,9 @@ function create(s) {
     PP.layers.set_z_index(primo_pianolvl2_2, 40);
     PP.layers.set_z_index(sottolvl2_pt2, -4);
 
-    // Checkpoint: salva questo livello come punto di respawn
     PP.game_state.set_variable("last_scene", "lvl2_pt2");
 
-    // ===============================================
-    // *** GENERAZIONE CASCATE (CORRETTE) ***
-    // ===============================================
+    // GENERAZIONE CASCATE
     let waterfall_configs = [
         { x: 1032, start_y: -824, end_y: 2000 },
         { x: 1202, start_y: -824, end_y: 2000 },
@@ -97,8 +93,7 @@ function create(s) {
 
     // Ritorno da lvl3 (backtracking)
     if (punto == "fine") {
-        // --- MODIFICATO QUI: PIU' A SINISTRA ---
-        start_x = 4250; // Era 4300, spostato leggermente più a sinistra
+        start_x = 4250;
         start_y = -4390;
         PP.game_state.set_variable("punto_di_partenza", "inizio");
     }
@@ -160,16 +155,15 @@ function update(s) {
 
     manage_player_update(s, player);    
 
-    // --- LOGICA PASSAGGI DI LIVELLO ---
+    // LOGICA PASSAGGI DI LIVELLO
     
-    // 1. VERSO LVL 3 (NUOVE COORDINATE)
-    // --- MODIFICATO QUI: TRIGGER PIU' A DESTRA ---
-    if (player.geometry.x >= 4650 && player.geometry.y <= -4300) { // Era 4500
+    // VERSO LVL 3
+    if (player.geometry.x >= 4650 && player.geometry.y <= -4300) {
         PP.game_state.set_variable("punto_di_partenza", "inizio");
         PP.scenes.start("lvl3");
     }
 
-    // 2. VERSO LVL 1 PT 2 (INDIETRO)
+    // VERSO LVL 1 PT 2 (INDIETRO)
     if (player.geometry.x <= -240) {
         PP.game_state.set_variable("punto_di_partenza", "fine");
         PP.scenes.start("lvl2_pt1");

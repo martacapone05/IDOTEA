@@ -1,4 +1,3 @@
-// VARIABILI IMMAGINI SFONDO
 let img_background1; // sfondo10
 let img_background2; // sfondo11
 let img_background3; // sfondo12
@@ -6,24 +5,24 @@ let img_background3; // sfondo12
 let img_player;
 let img_info;
 
-// NUOVE VARIABILI NPC E AMBIENTE
+// VARIABILI NPC E AMBIENTE
 let img_pecora;
 let img_dialogue_bg_2; 
 let img_mulino;
 let img_muro_rompibile;
+
+// VARIABILI BOTTONI E VIGNETTA
+let img_button_e;
+let img_button_r;
+let img_vignetta_pecora; 
 
 // VARIABILI CASCATE E FUMO
 let img_waterfall1;
 let img_waterfall2;
 let img_waterfall5;
 let img_schiuma5;
-let img_smoke2; // Nuova immagine fumo
-let img_condizionatore1; // Nuova immagine condizionatore
-
-// IMMAGINI COMANDI E VIGNETTE
-let img_comando_e;
-let img_comando_r;
-let img_vignetta_pecora; 
+let img_smoke2;
+let img_condizionatore1;
 
 // VARIABILI OGGETTI
 let background1;
@@ -38,13 +37,11 @@ let mulino_anim;
 let muro_pecora;
 let pecora;
 
-let funivia_ritorno_zone;
+// Variabili gestione vignetta pecora
+let vignetta_pecora_obj;
+let vignetta_pecora_removed = false;
 
-// BOTTONI E VIGNETTE
-let btn_e_pecora;
-let btn_r_muro;
-let btn_e_funivia;
-let vignetta_pecora; 
+let funivia_ritorno_zone;
 
 // VARIABILI SISTEMA DIALOGHI
 let npc_list = [];
@@ -61,9 +58,6 @@ const NPC_INTERACTION_RANGE = 200;
 let has_spoken_to_pecora = false;
 let wall_broken_pecora = false;
 let is_player_attacking = false;
-
-// VARIABILE PER LA VIGNETTA (Per farla sparire per sempre)
-let has_seen_vignetta_pecora = false; 
 
 // DEFINIZIONE DIALOGHI
 let dialoghi_pecora_fase1 = [
@@ -97,7 +91,6 @@ function preload(s) {
     img_info = PP.assets.image.load(s, "assets/images/info.png");
     img_player = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_player.png", 185, 294);
 
-    // NUOVI CARICAMENTI
     img_pecora = PP.assets.sprite.load_spritesheet(s, "assets/images/sprite_pecora.png", 250, 284);
     img_dialogue_bg_2 = PP.assets.image.load(s, "assets/images/dialoghi/dialogo3.png");
     img_mulino = PP.assets.sprite.load_spritesheet(s, "assets/images/sprite_mulino.png", 160, 480);
@@ -109,13 +102,12 @@ function preload(s) {
     img_waterfall5 = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/waterfall5sprites.png", 214, 218);
     img_schiuma5 = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/schiuma5sprites.png", 244, 83);
     
-    // Fumo (250x600) e Condizionatore
-    img_smoke2 = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/smoke2sprite.png", 250, 600);
-    img_condizionatore1 = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/condizionatore1.png", 132, 102); 
+    img_smoke2 = PP.assets.sprite.load_spritesheet(s, "assets/images/smoke2sprites.png", 250, 600);
+    img_condizionatore1 = PP.assets.sprite.load_spritesheet(s, "assets/images/condizionatore1.png", 132, 102);
 
-    // CARICAMENTO COMANDI E VIGNETTA
-    img_comando_e = PP.assets.image.load(s, "assets/images/comando_e.png");
-    img_comando_r = PP.assets.image.load(s, "assets/images/comando_r.png");
+    // CARICAMENTO BOTTONI E VIGNETTA
+    img_button_e = PP.assets.image.load(s, "assets/images/comando_e.png");
+    img_button_r = PP.assets.image.load(s, "assets/images/comando_r.png");
     img_vignetta_pecora = PP.assets.image.load(s, "assets/images/vignette/vignetta_pecora.png");
 
     preload_platforms(s);
@@ -125,16 +117,13 @@ function preload(s) {
 
 function create(s) {
 
-    // Checkpoint
     PP.game_state.set_variable("last_scene", "lvl2_pt1");
 
     reset_npcs();
     has_spoken_to_pecora = false;
     wall_broken_pecora = false;
     is_player_attacking = false;
-    
-    // Reset variabile vignetta quando si ricarica il livello
-    has_seen_vignetta_pecora = false; 
+    vignetta_pecora_removed = false;
 
     // 1. SFONDI PARALLASSE
     background1 = PP.assets.tilesprite.add(s, img_background1, 0, 0, 1280, 800, 0, 0);
@@ -195,25 +184,17 @@ function create(s) {
     configure_player_animations(s, player); 
 
 
-    // ===============================================
-    // *** 5. PAVIMENTO INIZIALE ***
-    // ===============================================
     floor = PP.shapes.rectangle_add(s, -300, 620, 2000, 10, "0x000000", 0);
     PP.physics.add(s, floor, PP.physics.type.STATIC);
     PP.physics.add_collider(s, player, floor);
 
 
-    // ===============================================
-    // *** 6. CARICAMENTO ALTRE PIATTAFORME ***
-    // ===============================================
     if(typeof create_platforms_lvl2_pt1 === "function") {
         create_platforms_lvl2_pt1(s, player);
     }
 
 
-    // ===============================================
-    // *** 7. MULINO (13488, -1040) ***
-    // ===============================================
+    // MULINO
     mulino_anim = PP.assets.sprite.add(s, img_mulino, 13488, -1040, 0, 1);
     
     PP.assets.sprite.animation_add(mulino_anim, "stop", 0, 0, 1, 0); 
@@ -224,9 +205,7 @@ function create(s) {
     PP.layers.set_z_index(mulino_anim, 15); 
 
 
-       // ===============================================
-    // *** 8. MURO ROMPIBILE (13226, -1129) ***
-    // ===============================================
+    // MURO ROMPIBILE
     muro_pecora = PP.assets.sprite.add(s, img_muro_rompibile, 13226, -1129, 0, 1);
     muro_pecora.is_broken = false;
     
@@ -238,7 +217,7 @@ function create(s) {
     
     PP.physics.add(s, muro_pecora, PP.physics.type.STATIC);
 
-    // *** SENSORE INTERAZIONE MURO ***
+    // SENSORE INTERAZIONE MURO
     let sensore_width = 236;
     let sensore_height = 392; 
     let sensore_x = 13380; 
@@ -258,10 +237,11 @@ function create(s) {
     };
     PP.physics.add_overlap_f(s, player, sensore_muro, on_sensore_overlap);
 
+    let btn_r_muro = PP.assets.image.add(s, img_button_r, 13301, -1275, 0, 0);
+    PP.layers.set_z_index(btn_r_muro, 30);
 
-    // ===============================================
-    // *** 9. NPC PECORA (12840, -1122) ***
-    // ===============================================
+
+    // NPC PECORA
     pecora = PP.assets.sprite.add(s, img_pecora, 12840, -1122, 0, 1);
     
     PP.assets.sprite.animation_add(pecora, "idle", 0, 4, 8, -1);
@@ -273,40 +253,16 @@ function create(s) {
 
     register_npc(pecora, "Pecora", dialoghi_pecora_fase1);
 
+    let btn_e_pecora = PP.assets.image.add(s, img_button_e, 12899, -1275, 0, 0); 
+    PP.layers.set_z_index(btn_e_pecora, 30);
 
-    // ===============================================
-    // *** BOTTONI (PROMPT) ***
-    // ===============================================
-    
-    // Bottone E (Pecora) - 12899, -1275
-    btn_e_pecora = PP.assets.image.add(s, img_comando_e, 12899, -1275, 0, 0);
-    btn_e_pecora.visibility.alpha = 0; 
-    PP.layers.set_z_index(btn_e_pecora, 9999);
-
-    // Bottone R (Muro) - 13301, -1275
-    btn_r_muro = PP.assets.image.add(s, img_comando_r, 13301, -1275, 0, 0);
-    btn_r_muro.visibility.alpha = 0; 
-    PP.layers.set_z_index(btn_r_muro, 9999);
-
-    // Bottone E (Funivia)
-    btn_e_funivia = PP.assets.image.add(s, img_comando_e, -392, 476, 0, 0);
-    btn_e_funivia.visibility.alpha = 0;
-    PP.layers.set_z_index(btn_e_funivia, 9999);
-
-    // ===============================================
-    // *** VIGNETTA PECORA (12627, -1483) ***
-    // ===============================================
-    vignetta_pecora = PP.assets.image.add(s, img_vignetta_pecora, 12627, -1483, 0, 0);
-    vignetta_pecora.visibility.alpha = 0;
-    PP.layers.set_z_index(vignetta_pecora, 24); 
+    vignetta_pecora_obj = PP.assets.image.add(s, img_vignetta_pecora, 12627, -1483, 0, 0);
+    PP.layers.set_z_index(vignetta_pecora_obj, 30);
 
 
-    // ===============================================
-    // *** 10. HUD E CAMERA ***
-    // ===============================================
+    // HUD E CAMERA
     create_hud(s, player); 
-    create_collectible_fragment(s, 1200, 470, player);
-    create_collectible_heart(s, 1700, 470, player);
+    create_collectible_fragment(s, 14539, -1340, player);
 
     funivia_ritorno_zone = PP.shapes.rectangle_add(s, -373, 464, 220, 253, "0x00FF00", 0.5);
     PP.physics.add(s, funivia_ritorno_zone, PP.physics.type.STATIC);
@@ -317,6 +273,10 @@ function create(s) {
             PP.scenes.start("lvl1_pt2");
         }
     });
+
+    let btn_e_funivia = PP.assets.image.add(s, img_button_e, -392, 476, 0, 0); 
+    PP.layers.set_z_index(btn_e_funivia, 30);
+
 
     PP.camera.start_follow(s, player, 0, 120);
     
@@ -350,6 +310,20 @@ function create(s) {
 function update(s) {
     PP.camera.set_bounds(s, -1300, -2550, 17620, 6000);
     
+    // LOGICA VIGNETTA PECORA (DISTANZA E DIALOGO)
+    if (vignetta_pecora_obj && !vignetta_pecora_removed && player) {
+        let dist_pecora = Math.abs(player.geometry.x - 12840);
+        
+        if (has_spoken_to_pecora) {
+            vignetta_pecora_obj.visibility.alpha = 0;
+            vignetta_pecora_removed = true;
+        } else if (dist_pecora <= 800) {
+            vignetta_pecora_obj.visibility.alpha = 1;
+        } else {
+            vignetta_pecora_obj.visibility.alpha = 0;
+        }
+    }
+
     manage_npc_interaction(s, player);
 
     if (PP.interactive.kb.is_key_down(s, PP.key_codes.R)) {
@@ -362,12 +336,6 @@ function update(s) {
             
             PP.assets.sprite.animation_play(player, "piccone");
             
-            // Distruzione bottone R
-            if (btn_r_muro) {
-                PP.assets.destroy(btn_r_muro);
-                btn_r_muro = null;
-            }
-
             PP.timers.add_timer(s, 500, function() {
                 
                 if(player.current_wall) {
@@ -408,7 +376,9 @@ function update(s) {
 
     player.cam_offset_x += (player.cam_target_x - player.cam_offset_x) * 0.03;
 
-    if (player.geometry.x > 7500) {
+if (player.geometry.x > 12686) {
+        player.cam_target_y = 150;
+    } else if (player.geometry.x > 7500) {
         player.cam_target_y = -20;
     } else {
         player.cam_target_y = 120;
@@ -424,7 +394,6 @@ function update(s) {
     background3.tile_geometry.x = scroll_x * 0.5;
 
     if (player.geometry.y > 4000) {
-        console.log("Caduto nel vuoto! Game Over...");
         PP.game_state.set_variable("last_scene", "lvl2_pt1");
         PP.scenes.start("game_over");
 
@@ -443,68 +412,9 @@ function update(s) {
         PP.scenes.start("lvl2_pt2");
     }
 
-    // ===============================================
-    // *** GESTIONE VISIBILITÀ BOTTONI (500px) ***
-    // ===============================================
-    
-    // Bottone E (Pecora)
-    if (btn_e_pecora) {
-        let dist = Math.abs(player.geometry.x - 12840);
-        if (dist < 500 && !dialogue_active) {
-            btn_e_pecora.visibility.alpha = 1;
-        } else {
-            btn_e_pecora.visibility.alpha = 0;
-        }
-    }
-
-    // Bottone R (Muro)
-    if (btn_r_muro) {
-        let dist = Math.abs(player.geometry.x - 13226);
-        if (dist < 500 && !is_player_attacking && !wall_broken_pecora) {
-            btn_r_muro.visibility.alpha = 1;
-        } else {
-            btn_r_muro.visibility.alpha = 0;
-        }
-    }
-
-    // Bottone E (Funivia)
-    if (btn_e_funivia) {
-        let dist = Math.abs(player.geometry.x - (-392));
-        if (dist < 500) {
-            btn_e_funivia.visibility.alpha = 1;
-        } else {
-            btn_e_funivia.visibility.alpha = 0;
-        }
-    }
-
-    // GESTIONE VIGNETTA PECORA
-    if (vignetta_pecora) {
-        if (has_seen_vignetta_pecora) {
-            vignetta_pecora.visibility.alpha = 0;
-        } else {
-            let dist = Math.abs(player.geometry.x - 12627);
-            
-            // SE SEI TROPPO VICINO (< 100): SPARISCE PER SEMPRE
-            if (dist < 100) {
-                has_seen_vignetta_pecora = true;
-                vignetta_pecora.visibility.alpha = 0;
-            } 
-            // SE SEI NEL RAGGIO (<= 800)
-            else if (dist <= 800) {
-                vignetta_pecora.visibility.alpha = 1;
-            } 
-            // SE SEI LONTANO
-            else {
-                vignetta_pecora.visibility.alpha = 0;
-            }
-        }
-    }
-
 }
 
-// ==========================================================
-// *** FUNZIONI NPC (SISTEMA DIALOGHI) ***
-// ==========================================================
+// FUNZIONI NPC (SISTEMA DIALOGHI)
 
 function register_npc(sprite_obj, name, dialogues) {
     sprite_obj.npc_name = name;
@@ -537,6 +447,10 @@ function get_nearest_interactable_npc(player) {
 
 function open_dialogue_popup(s, npc) {
     if (dialogue_active) return;
+    
+    dialogue_active = true;
+    current_npc = npc;
+    current_dialogue_index = 0;
     
     if(npc.npc_name === "Pecora") {
         has_spoken_to_pecora = true;
@@ -589,6 +503,7 @@ function close_dialogue_popup() {
     if (!dialogue_active) return;
     dialogue_active = false;
     current_npc = null;
+    current_dialogue_index = 0;
     
     if (dialogue_popup) {
         PP.assets.destroy(dialogue_popup); 
@@ -686,29 +601,26 @@ function create_smoke(s) {
     let add_smoke = function(x, y) {
         let smoke = PP.assets.sprite.add(s, img_smoke2, x, y, 0, 1);
         
-        // --- 0-5 Frame (SICURO PER EVITARE CRASH) ---
-        // Se cambi l'immagine con una larga 6000px, puoi rimettere 23 qui.
-        PP.assets.sprite.animation_add(smoke, "smoke_anim", 0, 5, 10, -1);
+
+        PP.assets.sprite.animation_add(smoke, "smoke_anim", 0, 23, 24, -1);
         
         PP.assets.sprite.animation_play(smoke, "smoke_anim");
-        PP.layers.set_z_index(smoke, 20); 
+        PP.layers.set_z_index(smoke, 0); 
     };
 
     // Coordinate Fumo
-    add_smoke(-66, -2270);
-    add_smoke(456, -2683);
-    add_smoke(809, -2683);
-    add_smoke(1160, -2683);
-    add_smoke(6146, -2343);
+    add_smoke(-66, -1670);
+    add_smoke(456, -2083);
+    add_smoke(809, -2083);
+    add_smoke(1160, -2083);
+    add_smoke(6146, -1743);
 
-    // Condizionatore (ANIMAZIONE AGGIUNTA)
+    // Condizionatore
     let cond = PP.assets.sprite.add(s, img_condizionatore1, 818, -1401, 0, 1);
-    
-    // Animazione condizionatore (Frame 0-3)
+    PP.layers.set_z_index(cond, 20);
+
     PP.assets.sprite.animation_add(cond, "spin_cond", 0, 3, 10, -1);
     PP.assets.sprite.animation_play(cond, "spin_cond");
-    
-    PP.layers.set_z_index(cond, 10);
 }
 
 function destroy(s) {

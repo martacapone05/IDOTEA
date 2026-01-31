@@ -42,7 +42,7 @@ function create(s) {
     showing_end_card = false;
     space_was_pressed = true; // Evita salto immediato
 
-    // 1. Aggiungiamo lo sprite della sequenza
+    // Aggiungiamo lo sprite della sequenza
     sprite_fin = PP.assets.sprite.add(s, img_tavole_fin, 640, 360, 0.5, 0.5);
     PP.layers.set_z_index(sprite_fin, 1);
     
@@ -51,7 +51,7 @@ function create(s) {
     }
     PP.assets.sprite.animation_play(sprite_fin, "f" + sequence[current_seq_index]);
 
-    // 2. Aggiungiamo l'immagine finale ma la nascondiamo (alpha 0)
+    // Aggiungiamo l'immagine finale ma la nascondiamo (alpha 0)
     end_card_obj = PP.assets.image.add(s, img_scelta, 640, 360, 0.5, 0.5);
     end_card_obj.visibility.alpha = 0; // Invisibile all'inizio
     PP.layers.set_z_index(end_card_obj, 10); // Sopra a tutto

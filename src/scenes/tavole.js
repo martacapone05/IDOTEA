@@ -9,27 +9,26 @@ let is_animating = false; // Variabile per bloccare input durante le transizioni
 // Variabile per caricare l'immagine
 let img_tavole_spritesheet;
 
-// --- VARIABILI PER FRECCE ---
+// VARIABILI PER FRECCE
 let img_freccia_sx;
 let img_freccia_dx;
 
-// --- NUOVE VARIABILI MENU ---
+// NUOVE VARIABILI MENU
 let img_menu_princ;
 let btn_home_zone;
 
-// --- VARIABILI PER CLICK FRECCE ---
+// VARIABILI PER CLICK FRECCE
 let zone_sx;
 let zone_dx;
 
 function preload(s) {
-    // Carica lo spritesheet unico (2360x1640 per frame, 15 frame totali)
     img_tavole_spritesheet = PP.assets.sprite.load_spritesheet(s, "assets/images/spritesheet_tavole.png", 2360, 1640);
 
-    // --- CARICAMENTO IMMAGINI FRECCE ---
+    //CARICAMENTO IMMAGINI FRECCE
     img_freccia_sx = PP.assets.image.load(s, "assets/images/freccia_sx.png");
     img_freccia_dx = PP.assets.image.load(s, "assets/images/freccia_dx.png");
 
-    // --- CARICAMENTO IMMAGINE MENU ---
+    // CARICAMENTO IMMAGINE MENU
     img_menu_princ = PP.assets.image.load(s, "assets/images/menu_princ.png");
 }
 
@@ -37,18 +36,16 @@ function create(s) {
     tavole_current = 0;
     is_animating = false;
     
-    // Sfondo bianco
     tavole_bg = PP.shapes.rectangle_add(s, 640, 400, 1280, 800, "0xe5e4d3", 1);
     
     
-    // --- CREAZIONE SPRITE TAVOLE ---
+    // CREAZIONE SPRITE TAVOLE
     tavole_sprite = PP.assets.sprite.add(s, img_tavole_spritesheet, 640, 375, 0.5, 0.5);
     
     tavole_sprite.geometry.scale_x = 0.44;
     tavole_sprite.geometry.scale_y = 0.44;
 
-    // --- DEFINIZIONE ANIMAZIONI ---
-    // Frame 0-14 totali
+    // DEFINIZIONE ANIMAZIONI
     
     // Statici
     PP.assets.sprite.animation_add(tavole_sprite, "static_0", 0, 0, 1, 0);   // Frame 0
@@ -65,8 +62,6 @@ function create(s) {
 
     // Partiamo dallo stato statico 0
     PP.assets.sprite.animation_play(tavole_sprite, "static_0");
-
-    // --- SOSTITUZIONE FRECCE TESTUALI CON IMMAGINI ---
     
     // Hint freccia sinistra (immagine)
     tavole_hint_left = PP.assets.image.add(s, img_freccia_sx, 100, 380, 0.5, 0.5);
@@ -74,7 +69,7 @@ function create(s) {
     // Hint freccia destra (immagine)
     tavole_hint_right = PP.assets.image.add(s, img_freccia_dx, 1180, 380, 0.5, 0.5);
     
-    // --- ZONE CLICKABILI FRECCE (Invisibili) ---
+    // ZONE CLICKABILI FRECCE (Invisibili)
     // Rettangolo sopra la freccia sinistra
     zone_sx = PP.shapes.rectangle_add(s, 80, 400, 100, 100, "0x00FF00", 0);
     PP.layers.set_z_index(zone_sx, 101);
@@ -97,11 +92,11 @@ function create(s) {
     });
 
     
-    // --- NUOVO MENU PRINCIPALE (SOVRAPPOSIZIONE) ---
+    // NUOVO MENU PRINCIPALE (SOVRAPPOSIZIONE)
     let menu_overlay = PP.assets.image.add(s, img_menu_princ, 640, 360, 0.5, 0.5);
     PP.layers.set_z_index(menu_overlay, 100);
 
-    // --- BOTTONE INVISIBILE PER TORNARE AL MENU ---
+    // BOTTONE INVISIBILE PER TORNARE AL MENU
     btn_home_zone = PP.shapes.rectangle_add(s, 238, 57, 408, 66, "0x00FF00", 0); 
     PP.layers.set_z_index(btn_home_zone, 101); 
     
@@ -128,7 +123,7 @@ function update(s) {
 
     if (!tavole_key_was_pressed) {
         
-        // --- NAVIGAZIONE INDIETRO (SINISTRA) ---
+        // NAVIGAZIONE INDIETRO (SINISTRA)
         if (left_pressed && tavole_current > 0) {
             tavole_key_was_pressed = true;
             go_prev(s);
@@ -195,7 +190,7 @@ function update_ui_visibility() {
         if(zone_sx && zone_sx.input) zone_sx.input.enabled = true;
         if(zone_dx && zone_dx.input) zone_dx.input.enabled = true;
 
-    } else { // 2
+    } else {
         tavole_hint_left.visibility.alpha = 1;
         tavole_hint_right.visibility.alpha = 0.3; // Disabilitata
         if(zone_sx && zone_sx.input) zone_sx.input.enabled = true;
