@@ -209,8 +209,8 @@ function create(s) {
 
     // SPAWN INIZIALE LVL3
 
-    let start_x = 1000
-    let start_y = -6500
+    let start_x = -1400
+    let start_y = 590
 
     if (PP.game_state.get_variable("punto_di_partenza") == "fine") {
         start_x = -1400; 
