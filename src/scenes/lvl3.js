@@ -11,6 +11,7 @@ let img_dialogue_bg;
 let img_waterfall3;
 let img_waterfall1;
 let img_overlay_cascata;
+let img_overlay_cascata2;
 
 let background;
 let info;
@@ -44,6 +45,7 @@ let avvoltoio_flying = false;
 let fly_start_time = 0;
 let fly_duration = 2500;
 let fly_height = 300; 
+let avvoltoio_flash_timer = 0; // Timer per il lampeggio
 
 let fly_pos_1_start = { x: 1700, y: -6163 }; 
 let fly_pos_1_end = { x: 1490, y: -6550 };
@@ -87,6 +89,7 @@ function preload(s) {
     img_waterfall3 = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/waterfall3sprites.png", 57, 203);
     img_waterfall1 = PP.assets.sprite.load_spritesheet(s, "assets/images/traps/waterfall1sprites.png", 119, 211);
     img_overlay_cascata = PP.assets.image.load(s, "assets/images/overlay_cascata.png");
+    img_overlay_cascata2 = PP.assets.image.load(s, "assets/images/overlay_cascata2.png");
 
     preload_platforms(s);
     preload_player(s);
@@ -313,8 +316,16 @@ function update(s) {
         avvoltoio.geometry.x = current_x;
         avvoltoio.geometry.y = linear_y - arc; 
 
+        // --- LAMPEGGIO (FLASHING) ---
+        let current_time = PP.timers.get_time(s);
+        if (current_time > avvoltoio_flash_timer) {
+            avvoltoio.visibility.alpha = (avvoltoio.visibility.alpha === 1) ? 0.5 : 1;
+            avvoltoio_flash_timer = current_time + 100; // Ogni 100ms
+        }
+
         if (t >= 1) {
             avvoltoio_flying = false;
+            avvoltoio.visibility.alpha = 1; // Reset visibilità
             PP.assets.sprite.animation_play(avvoltoio, "idle");
             if (avvoltoio_stage === 5 && !level_completed) {
                 level_completed = true;
@@ -355,8 +366,13 @@ function update(s) {
                         else if (avvoltoio_stage === 2) { avvoltoio_stage = 3; current_fly_start = fly_pos_3_start; current_fly_end = fly_pos_3_end; current_fly_height = 300; }
                         else if (avvoltoio_stage === 3) { avvoltoio_stage = 4; current_fly_start = fly_pos_4_start; current_fly_end = fly_pos_4_end; current_fly_height = 300; }
                         else if (avvoltoio_stage === 4) { avvoltoio_stage = 5; current_fly_start = fly_pos_escape_start; current_fly_end = fly_pos_escape_end; current_fly_height = -300; }
+                        
                         fly_start_time = PP.timers.get_time(s);
                         avvoltoio_flying = true;
+                        
+                        // Attiva lampeggio
+                        avvoltoio_flash_timer = PP.timers.get_time(s);
+                        
                         PP.assets.sprite.animation_play(avvoltoio, "fly");
                     }, false);
                 }
